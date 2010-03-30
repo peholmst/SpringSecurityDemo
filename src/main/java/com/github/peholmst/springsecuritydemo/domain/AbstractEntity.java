@@ -52,7 +52,7 @@ public abstract class AbstractEntity implements Serializable {
 	 * 
 	 * @return the UUID, never <code>null</code>.
 	 */
-	public String getUuid() {
+	public String getUUID() {
 		return uuid;
 	}
 

@@ -21,7 +21,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 /**
- * Domain class that represents a categroy. Categories can be nested.
+ * Domain class that represents a category. Categories can be nested.
  * 
  * @author Petter Holmström
  */
@@ -31,11 +31,12 @@ public class Category extends AbstractEntity {
 	private static final long serialVersionUID = -3513404373476593420L;
 
 	@NotNull
-	@Size(min=1)
+	@Size(min = 1, max = 200)
 	private String name;
-	
+
+	@NotNull
 	private String description;
-	
+
 	@ManyToOne
 	private Category parent;
 

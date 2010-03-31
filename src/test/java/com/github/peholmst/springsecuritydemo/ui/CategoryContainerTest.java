@@ -15,10 +15,16 @@
  */
 package com.github.peholmst.springsecuritydemo.ui;
 
+import org.junit.Test;
+
 /**
  * @author petter
  *
  */
 public class CategoryContainerTest {
 
+	@Test
+	public void aDummyTestCase() {
+		
+	}
 }

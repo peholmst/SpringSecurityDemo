@@ -1,0 +1,11 @@
+@import url(../runo/styles.css);
+
+.appHeader {
+	background-color: #F14C1A;
+	border-bottom: 1px solid #666;
+}
+
+.appHeaderText {
+	font-size: 1.2em;
+	color: #FFF;
+}

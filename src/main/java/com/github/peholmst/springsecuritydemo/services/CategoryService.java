@@ -43,6 +43,7 @@ public interface CategoryService {
 	 * @return
 	 */
 	@PreAuthorize("hasRole('ROLE_USER') and hasPermission(#parent, 'read')")
+	@PostFilter("hasPermission(filterObject, 'read'")
 	public List<Category> getChildren(Category parent);
 		
 }

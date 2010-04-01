@@ -203,12 +203,20 @@
 			<version>1.2.15</version>
 			<exclusions>
 				<exclusion>
-					<artifactId>jmxri</artifactId>
 					<groupId>com.sun.jmx</groupId>
+					<artifactId>jmxri</artifactId>
 				</exclusion>
 				<exclusion>
-					<artifactId>jmxtools</artifactId>
 					<groupId>com.sun.jdmk</groupId>
+					<artifactId>jmxtools</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>javax.mail</groupId>
+					<artifactId>mail</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>javax.jms</groupId>
+					<artifactId>jms</artifactId>
 				</exclusion>
 			</exclusions>
 		</dependency>

@@ -1,0 +1,33 @@
+Spring Security & Vaadin Demo Application
+=========================================
+
+Quick Start: Trying out the demo application
+
+	Make sure you have JDK 6 and Maven 2.2. If not, you can download them from http://java.sun.com
+	and http://maven.apache.org, respectively.
+	
+	Fire up the embedded Jetty server by issuing the command:
+	
+	$ mvn jetty:run
+	
+	Then, point your favorite browser to http://localhost:8080/springsecuritydemo and start
+	exploring the application.
+	
+Quick Start: Editing the source code in Eclipse
+
+	There are two (mutually exclusive) ways of importing the source code into Eclipse:
+	
+	1. Use the M2Eclipse plugin (http://m2eclipse.sonatype.org) and import the project
+	   as a Maven project.
+	   
+	2. Ask Maven to generate the Eclipse project files for you by issuing the command:
+	   
+	   $ mvn eclipse:eclipse
+		
+	   Then import the project into your workspace.
+	   
+Quick Start: Editing the source code in NetBeans
+
+	NetBeans has built-in support for Maven, so all you have to do is open the project as
+	any other project.
+

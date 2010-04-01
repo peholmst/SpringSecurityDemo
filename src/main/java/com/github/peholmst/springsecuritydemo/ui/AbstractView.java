@@ -15,10 +15,15 @@
  */
 package com.github.peholmst.springsecuritydemo.ui;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import com.vaadin.ui.CustomComponent;
 
 /**
- * TODO document me!
+ * This class acts as a base class for views. In this context, a view is a
+ * custom component that is associated with exactly one instance of
+ * {@link SpringSecurityDemoApp}.
  * 
  * @author Petter Holmström
  */
@@ -26,6 +31,10 @@ public abstract class AbstractView extends CustomComponent {
 
 	private static final long serialVersionUID = -1275291398930837578L;
 	private final SpringSecurityDemoApp application;
+	/**
+	 * Comons Log for logging stuff.
+	 */
+	protected transient final Log logger = LogFactory.getLog(getClass());
 
 	/**
 	 * Creates a new <code>AbstractView</code>.
@@ -39,14 +48,34 @@ public abstract class AbstractView extends CustomComponent {
 		this.application = application;
 		init();
 	}
-	
+
 	/**
-	 * Called by the constructor to initialize the view.
+	 * Called by the constructor to initialize the view. The implementation must
+	 * set the composition root of the view.
+	 * 
+	 * @see #setCompositionRoot(com.vaadin.ui.Component)
 	 */
 	protected abstract void init();
 
+	/**
+	 * Returns the {@link SpringSecurityDemoApp} that this view belongs to.
+	 * 
+	 * @return the application instance, never <code>null</code>.
+	 */
 	@Override
 	public SpringSecurityDemoApp getApplication() {
 		return application;
+	}
+
+	@Override
+	protected void finalize() throws Throwable {
+		if (logger.isDebugEnabled()) {
+			/*
+			 * I included this because I wanted to see when views are garbage
+			 * collected.
+			 */
+			logger.debug("Garbage collecting view [" + this + "] owned by [" + application + "]");
+		}
+		super.finalize();
 	}
 }

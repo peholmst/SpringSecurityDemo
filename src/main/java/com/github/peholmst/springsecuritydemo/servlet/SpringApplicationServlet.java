@@ -104,6 +104,17 @@ public class SpringApplicationServlet extends AbstractApplicationServlet {
 		 */
 		applicationContext = WebApplicationContextUtils
 				.getWebApplicationContext(servletConfig.getServletContext());
+
+		if (applicationContext.isSingleton(applicationBean)) {
+			if (logger.isErrorEnabled()) {
+				logger.error("ApplicationBean must not be a singleton");
+			}
+			throw new ServletException("ApplicationBean must not be a singleton");
+		}
+		if (!applicationContext.isPrototype(applicationBean) && logger.isWarnEnabled()) {
+			logger.warn("ApplicationBean is not a prototype");
+		}
+		
 		/*
 		 * Get the application class from the application context
 		 */

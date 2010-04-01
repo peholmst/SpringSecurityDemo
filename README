@@ -1,7 +1,24 @@
 Spring Security & Vaadin Demo Application
 =========================================
 
-Quick Start: Trying out the demo application
+What is this application?
+
+	The purpose of this application is to demonstrate how Spring Security can be used
+	to secure web applications with Vaadin-based user interfaces. It also demonstrates
+	how said applications can be localized using the localization features of Spring.
+	
+	Originally, the application was written for an article published on the Vaadin Wiki:
+	http://vaadin.com/wiki/-/wiki/Main/Vaadin%20and%20Spring%20Security
+	
+Getting the source code
+
+	The source code of this application is hosted on GitHub. If you do not have Git, you can
+	download it from http://git-scm.com. When you are done, you can checkout the source by
+	issuing the command:
+	
+	$ git clone http://github.com/peholmst/SpringSecurityDemo.git
+	
+Trying out the demo application
 
 	Make sure you have JDK 6 and Maven 2.2. If not, you can download them from http://java.sun.com
 	and http://maven.apache.org, respectively.
@@ -13,7 +30,7 @@ Quick Start: Trying out the demo application
 	Then, point your favorite browser to http://localhost:8080/springsecuritydemo and start
 	exploring the application.
 	
-Quick Start: Editing the source code in Eclipse
+Editing the source code in Eclipse
 
 	There are two (mutually exclusive) ways of importing the source code into Eclipse:
 	
@@ -24,10 +41,17 @@ Quick Start: Editing the source code in Eclipse
 	   
 	   $ mvn eclipse:eclipse
 		
-	   Then import the project into your workspace.
+	   Then import the project into your workspace. You will probably received some warnings about
+	   classpath entries that will not be exported or published. You can ignore them, or manually
+	   edit the project properties to remove them completely.
 	   
-Quick Start: Editing the source code in NetBeans
+Editing the source code in NetBeans
 
 	NetBeans has built-in support for Maven, so all you have to do is open the project as
 	any other project.
 
+Credits
+	
+	Some parts of the application are based on the SpringApplication example 
+	(http://dev.vaadin.com/browser/incubator/SpringApplication) by Petri Hakala.
+	

@@ -100,8 +100,6 @@ public class SpringSecurityDemoApp extends Application {
 		// Create the views
 		loginView = new LoginView(this, authenticationManager);
 		loginView.setSizeFull();
-		mainView = new MainView(this);
-		mainView.setSizeFull();
 
 		setTheme("SpringSecurityDemo"); // We use a custom theme
 
@@ -126,6 +124,9 @@ public class SpringSecurityDemoApp extends Application {
 					SecurityContextHolder.getContext().setAuthentication(
 							((LoginView.LoginEvent) event).getAuthentication());
 					removeWindow(loginWindow);
+					loginView = null;
+					mainView = new MainView(SpringSecurityDemoApp.this);
+					mainView.setSizeFull();
 					setMainWindow(new Window(getMessage("app.title",
 							getVersion()), mainView));
 				}
@@ -163,7 +164,7 @@ public class SpringSecurityDemoApp extends Application {
 	 * @return an {@link Authentication} instance.
 	 */
 	@Override
-	public Object getUser() {
+	public Authentication getUser() {
 		// Get the user object form Spring Security
 		return SecurityContextHolder.getContext().getAuthentication();
 	}

@@ -31,7 +31,7 @@ public interface CategoryService {
 
 	/**
 	 * 
-	 * @return
+	 * @return an unmodifiable list containing all the root categories (never <code>null</code>).
 	 */
 	@PreAuthorize("hasRole('ROLE_USER'")
 	@PostFilter("hasPermission(filterObject, 'read')")
@@ -40,10 +40,23 @@ public interface CategoryService {
 	/**
 	 * 
 	 * @param parent
-	 * @return
+	 * @return an unmodifiable list containing all the children of <code>parent</code>, or <code>null</code> if <code>parent</code> could not be found.
 	 */
 	@PreAuthorize("hasRole('ROLE_USER') and hasPermission(#parent, 'read')")
 	@PostFilter("hasPermission(filterObject, 'read'")
 	public List<Category> getChildren(Category parent);
-		
+
+	/**
+	 * 
+	 * @param category
+	 * @return
+	 */
+	public Category saveCategory(Category category);
+	
+	/**
+	 * 
+	 * @param category
+	 */
+	public void deleteCategory(Category category);
+	
 }

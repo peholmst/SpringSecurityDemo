@@ -16,7 +16,9 @@
 package com.github.peholmst.springsecuritydemo.ui;
 
 import java.util.Collection;
+import java.util.List;
 
+import com.github.peholmst.springsecuritydemo.domain.Category;
 import com.github.peholmst.springsecuritydemo.services.CategoryService;
 import com.vaadin.data.Container;
 import com.vaadin.data.Item;
@@ -40,6 +42,10 @@ public class CategoryContainer implements Container.Hierarchical {
 	public CategoryService getCategoryService() {
 		return categoryService;
 	}
+	
+	private List<Category> rootCategories;
+	
+	
 	
 	@Override
 	public boolean areChildrenAllowed(Object itemId) {
@@ -67,8 +73,7 @@ public class CategoryContainer implements Container.Hierarchical {
 
 	@Override
 	public boolean isRoot(Object itemId) {
-		// TODO Auto-generated method stub
-		return false;
+		return rootItemIds().contains(itemId);
 	}
 
 	@Override
@@ -79,9 +84,8 @@ public class CategoryContainer implements Container.Hierarchical {
 	}
 
 	@Override
-	public Collection<?> rootItemIds() {
-		// TODO Auto-generated method stub
-		return null;
+	public Collection<Category> rootItemIds() {
+		return getCategoryService().getRootCategories();
 	}
 
 	@Override

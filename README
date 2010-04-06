@@ -34,7 +34,7 @@ Editing the source code in Eclipse
 
 	There are two (mutually exclusive) ways of importing the source code into Eclipse:
 	
-	1. Use the M2Eclipse plugin (http://m2eclipse.sonatype.org) and import the project
+	1. Use the M2Eclipse plugin ( http://m2eclipse.sonatype.org ) and import the project
 	   as a Maven project.
 	   
 	2. Ask Maven to generate the Eclipse project files for you by issuing the command:
@@ -53,7 +53,7 @@ Editing the source code in NetBeans
 Credits
 	
 	Some parts of the application are based on the SpringApplication example 
-	(http://dev.vaadin.com/browser/incubator/SpringApplication) by Petri Hakala.
+	( http://dev.vaadin.com/browser/incubator/SpringApplication ) by Petri Hakala.
 	
-	The icons used are taken from the Silk icons theme (http://www.famfamfam.com/lab/icons/silk/).
+	The icons used are taken from the Silk icons theme ( http://www.famfamfam.com/lab/icons/silk/ ).
 	

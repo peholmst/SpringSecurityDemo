@@ -37,7 +37,8 @@ public abstract class AbstractView extends CustomComponent {
 	protected transient final Log logger = LogFactory.getLog(getClass());
 
 	/**
-	 * Creates a new <code>AbstractView</code>.
+	 * Creates a new <code>AbstractView</code>. Subclasses should remember
+	 * to call {@link #init()}.
 	 * 
 	 * @param application
 	 *            the application that owns the view (never <code>null</code>).
@@ -46,11 +47,10 @@ public abstract class AbstractView extends CustomComponent {
 		super();
 		assert application != null : "application must not be null";
 		this.application = application;
-		init();
 	}
 
 	/**
-	 * Called by the constructor to initialize the view. The implementation must
+	 * Called by a subclass constructor to initialize the view. The implementation must
 	 * set the composition root of the view.
 	 * 
 	 * @see #setCompositionRoot(com.vaadin.ui.Component)

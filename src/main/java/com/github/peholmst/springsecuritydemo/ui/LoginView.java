@@ -102,13 +102,8 @@ public class LoginView extends AbstractView {
 			AuthenticationManager authenticationManager) {
 		super(application);
 		assert authenticationManager != null : "authenticationManager must not be null";
-		/*
-		 * Note, that the container will already have been initialized at this
-		 * stage. Therefore, init() must not contain any references to the
-		 * authenticationManager (with the exception of listener
-		 * implementations).
-		 */
 		this.authenticationManager = authenticationManager;
+		init();
 	}
 
 	@SuppressWarnings("serial")
@@ -131,6 +126,7 @@ public class LoginView extends AbstractView {
 
 		final Button loginButton = new Button(getApplication().getMessage(
 				"login.button"));
+		loginButton.setStyleName("primary");
 		// TODO Make it possible to submit the form by pressing <Enter> in any of the text fields
 		loginPanel.addComponent(loginButton);
 		((VerticalLayout) loginPanel.getContent()).setComponentAlignment(

@@ -1,19 +1,31 @@
-@import url(../runo/styles.css);
+@import url(../reindeer/styles.css);
 
 .appHeader {
-	background-color: #F14C1A;
-	border-bottom: 1px solid #666;
+	background-color: #4D749F /* #F14C1A */;
+	border-bottom: 1px solid #2B425A;
 }
 
 .appHeaderText {
-	font-size: 1.2em;
+	font-size: 1.5em;
+	text-shadow: #2B425A 2px 2px 2px;
 	color: #FFF;
+	font-weight: bold;
 }
 
 .appHeaderUserLinks {
-	background-color: #fff;
+	background-color: #FFFFFF;
 	-moz-border-radius: 5px;
 	-webkit-border-radius: 5px;
+	padding: 5px 10px 5px 10px;
+	border: 1px solid #2B425A;
+}
+
+.v-panel-caption {
+	text-align: center;
 	padding: 5px;
-	border: 1px solid #666;
+	background: #4D749F;
+	color: #FFFFFF;
+	font-weight: bold;
+	-moz-border-radius: 5px 5px 0 0;
+	-webkit-border-radius: 5px 5px 0 0;
 }

@@ -40,6 +40,20 @@ public class Category extends AbstractEntity {
 	@ManyToOne
 	private Category parent;
 
+	public Category() {
+		this("", "");
+	}
+	
+	public Category(String name, String description) {
+		this(name, description, null);
+	}
+	
+	public Category(String name, String description, Category parent) {
+		this.name = name;
+		this.description = description;
+		this.parent = parent;
+	}
+	
 	public String getName() {
 		return name;
 	}

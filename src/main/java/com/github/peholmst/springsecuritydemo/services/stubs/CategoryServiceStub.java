@@ -20,8 +20,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.springframework.util.ObjectUtils;
-
 import com.github.peholmst.springsecuritydemo.domain.Category;
 import com.github.peholmst.springsecuritydemo.services.CategoryService;
 
@@ -33,8 +31,6 @@ import com.github.peholmst.springsecuritydemo.services.CategoryService;
  */
 @SuppressWarnings("serial")
 public class CategoryServiceStub implements CategoryService {
-
-	// TODO Add test for this class!
 	
 	static class CategoryEntry {
 		final Category category;
@@ -45,48 +41,65 @@ public class CategoryServiceStub implements CategoryService {
 		}
 	}
 
-	HashMap<Category, CategoryEntry> categories = new HashMap<Category, CategoryEntry>();
+	HashMap<String, CategoryEntry> categories = new HashMap<String, CategoryEntry>();
 	// We need this map to be able to detect if the parent has changed when a
 	// Category is saved.
-	HashMap<Category, Category> categoryToParentMap = new HashMap<Category, Category>();
+	HashMap<String, Category> categoryToParentMap = new HashMap<String, Category>();
 
 	static Category NULL_CATEGORY = new Category() {
 		@Override
 		public String getName() {
 			return "NULL";
 		}
+		public String getUUID() {
+			return "NULL";
+		};
+		public boolean equals(Object obj) {
+			if (obj == null) {
+				return false;
+			}
+			return obj.getClass() == getClass();
+		};
+		public int hashCode() {
+			return getClass().hashCode();
+		};
 	};
 
 	public CategoryServiceStub() {
-		categories.put(NULL_CATEGORY, new CategoryEntry(NULL_CATEGORY));
+		categories.put(NULL_CATEGORY.getUUID(), new CategoryEntry(NULL_CATEGORY));
 	}
 	
 	@Override
 	public void deleteCategory(Category category) {
 		// Lookup entry from map
-		CategoryEntry entry = categories.get(category);
+		CategoryEntry entry = categories.get(category.getUUID());
 		if (entry != null) {
 			CategoryEntry newParentEntry = null;
 			if (category.getParent() != null) {
-				newParentEntry = categories.get(category.getParent());
+				newParentEntry = categories.get(category.getParent().getUUID());
 			} else {
-				newParentEntry = categories.get(NULL_CATEGORY);
+				newParentEntry = categories.get(NULL_CATEGORY.getUUID());
 			}
 			// Move all children to new parent
 			for (Category child : entry.children) {
 				child.setParent(category.getParent());
 				newParentEntry.children.add(child);
-				categoryToParentMap.put(child, newParentEntry.category);
+				categoryToParentMap.put(child.getUUID(), newParentEntry.category);
 			}
-			categories.remove(category);
-			categoryToParentMap.remove(category);
+			if (category.getParent() == null) {
+				categories.get(NULL_CATEGORY.getUUID()).children.remove(category);
+			} else {
+				categories.get(category.getParent().getUUID()).children.remove(category);
+			}
+			categories.remove(category.getUUID());
+			categoryToParentMap.remove(category.getUUID());
 		}
 	}
 
 	@Override
 	public List<Category> getChildren(Category parent) {
 		// Lookup entry from map
-		CategoryEntry entry = categories.get(parent);
+		CategoryEntry entry = categories.get(parent.getUUID());
 		if (entry == null) {
 			return null; // Parent not found
 		} else {
@@ -97,35 +110,31 @@ public class CategoryServiceStub implements CategoryService {
 	@Override
 	public List<Category> getRootCategories() {
 		// Lookup entry from map
-		CategoryEntry entry = categories.get(NULL_CATEGORY);
-		if (entry == null) {
-			return Collections.emptyList();
-		} else {
-			return Collections.unmodifiableList(entry.children);
-		}
+		CategoryEntry entry = categories.get(NULL_CATEGORY.getUUID());
+		return Collections.unmodifiableList(entry.children);
 	}
 
 	@Override
 	public Category saveCategory(Category category) {
 		// Check if the category has already been saved once?
-		CategoryEntry entry = categories.get(category);
+		CategoryEntry entry = categories.get(category.getUUID());
 		if (entry == null) {
 			// New category
 			entry = new CategoryEntry(category);
-			categories.put(category, entry);
+			categories.put(category.getUUID(), entry);
 		}
 
 		// Check that parent property points to a valid category
 		if (category.getParent() != null
-				&& !categories.containsKey(category.getParent())) {
+				&& !categories.containsKey(category.getParent().getUUID())) {
 			throw new IllegalArgumentException("Invalid parent property");
 		}
 
 		// Check if the parent property has changed
-		Category oldParent = categoryToParentMap.get(category);
-		if (oldParent != null && !ObjectUtils.nullSafeEquals(oldParent, category.getParent())) {
-			categories.get(oldParent).children.remove(category);
-			categoryToParentMap.remove(category);
+		Category oldParent = categoryToParentMap.get(category.getUUID());
+		if (oldParent != null && !oldParent.equals(category.getParent())) {
+			categories.get(oldParent.getUUID()).children.remove(category);
+			categoryToParentMap.remove(category.getUUID());
 		}
 
 		// Update the parent index
@@ -133,10 +142,23 @@ public class CategoryServiceStub implements CategoryService {
 		if (parent == null) {
 			parent = NULL_CATEGORY;
 		}
-		categories.get(parent).children.add(category);
-		categoryToParentMap.put(category, parent);
+		categories.get(parent.getUUID()).children.add(category);
+		categoryToParentMap.put(category.getUUID(), parent);
 
 		return category;
 	}
+	
+	@Override
+	public Category getCategoryByUUID(String uuid) {
+		CategoryEntry entry = categories.get(uuid);
+		return entry == null ? null : entry.category;
+	}
 
+	@Override
+	public void deleteCategoryByUUID(String uuid) {
+		Category c = getCategoryByUUID(uuid);
+		if (c != null) {
+			deleteCategory(c);
+		}		
+	}
 }

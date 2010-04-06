@@ -68,6 +68,22 @@ public class Ticket extends AbstractEntity {
 	@NotNull
 	private String description;
 
+	public Ticket() {
+		this("", "", "", TicketStatus.PENDING, null, null, null);
+	}
+
+	public Ticket(String subject, String description, String reporter,
+			TicketStatus ticketStatus, Date openedDate, Date closedDate,
+			Category category) {
+		this.subject = subject;
+		this.description = description;
+		this.reporter = reporter;
+		this.ticketStatus = ticketStatus;
+		this.openedDate = openedDate;
+		this.closedDate = closedDate;
+		this.category = category;
+	}
+
 	/**
 	 * Checks whether the ticket is open or closed.
 	 * 

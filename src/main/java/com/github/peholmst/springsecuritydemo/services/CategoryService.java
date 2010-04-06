@@ -29,34 +29,71 @@ import com.github.peholmst.springsecuritydemo.domain.Category;
  */
 public interface CategoryService {
 
+	// TODO document the security annotations
+
 	/**
+	 * Gets all root categories, i.e. categories that do not have parents (
+	 * {@link Category#getParent()} returns <code>null</code>).
 	 * 
-	 * @return an unmodifiable list containing all the root categories (never <code>null</code>).
+	 * @return an unmodifiable list containing all the root categories (never
+	 *         <code>null</code>).
 	 */
 	@PreAuthorize("hasRole('ROLE_USER'")
 	@PostFilter("hasPermission(filterObject, 'read')")
 	public List<Category> getRootCategories();
-	
+
 	/**
+	 * Gets all the children of <code>parent</code>.
 	 * 
 	 * @param parent
-	 * @return an unmodifiable list containing all the children of <code>parent</code>, or <code>null</code> if <code>parent</code> could not be found.
+	 *            the parent whose children should be fetched (must not be
+	 *            <code>null</code>).
+	 * @return an unmodifiable list containing all the children of
+	 *         <code>parent</code>, or <code>null</code> if <code>parent</code>
+	 *         could not be found.
 	 */
 	@PreAuthorize("hasRole('ROLE_USER') and hasPermission(#parent, 'read')")
 	@PostFilter("hasPermission(filterObject, 'read'")
 	public List<Category> getChildren(Category parent);
 
 	/**
+	 * Saves <code>category</code>.
 	 * 
 	 * @param category
-	 * @return
+	 *            the category to save (must not be <code>null</code>).
+	 * @return the saved Category instance (never <code>null</code>).
 	 */
 	public Category saveCategory(Category category);
-	
+
 	/**
+	 * Deletes <code>category</code>. If <code>category</code> has children,
+	 * they are adopted by the parent of <code>category</code>. If
+	 * <code>category</code> is a root and has children, they will become new
+	 * roots. If <code>category</code> cannot be found, nothing happens.
 	 * 
 	 * @param category
+	 *            the category to delete (must not be <code>null</code>).
 	 */
 	public void deleteCategory(Category category);
-	
+
+	/**
+	 * Deletes the category identified by <code>uuid</code>. If the category has
+	 * children, they are adopted by the parent of the category. If the category
+	 * is a root and has children, they will become new roots. If no category is
+	 * found, nothing happens.
+	 * 
+	 * @param uuid
+	 *            the UUID of the category to delete (must not be
+	 *            <code>null</code>).
+	 */
+	public void deleteCategoryByUUID(String uuid);
+
+	/**
+	 * Gets the category identified by <code>uuid</code>.
+	 * 
+	 * @param uuid
+	 *            the UUID of the category (must not be <code>null</code>).
+	 * @return the category, or <code>null</code> if not found.
+	 */
+	public Category getCategoryByUUID(String uuid);
 }

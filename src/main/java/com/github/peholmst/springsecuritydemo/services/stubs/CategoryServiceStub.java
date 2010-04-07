@@ -130,21 +130,23 @@ public class CategoryServiceStub implements CategoryService {
 			throw new IllegalArgumentException("Invalid parent property");
 		}
 
-		// Check if the parent property has changed
+		Category parent = category.getParent();
+		if (parent == null) {
+			parent = NULL_CATEGORY;
+		}		
+		
+		// Remove reference to old parent if the parent property has changed
 		Category oldParent = categoryToParentMap.get(category.getUUID());
-		if (oldParent != null && !oldParent.equals(category.getParent())) {
+		if (oldParent != null && !oldParent.equals(parent)) {
 			categories.get(oldParent.getUUID()).children.remove(category);
 			categoryToParentMap.remove(category.getUUID());
 		}
 
-		// Update the parent index
-		Category parent = category.getParent();
-		if (parent == null) {
-			parent = NULL_CATEGORY;
+		// Update the parent index if the parent property has changed
+		if (!parent.equals(oldParent)) {
+			categories.get(parent.getUUID()).children.add(category);
+			categoryToParentMap.put(category.getUUID(), parent);
 		}
-		categories.get(parent.getUUID()).children.add(category);
-		categoryToParentMap.put(category.getUUID(), parent);
-
 		return category;
 	}
 	

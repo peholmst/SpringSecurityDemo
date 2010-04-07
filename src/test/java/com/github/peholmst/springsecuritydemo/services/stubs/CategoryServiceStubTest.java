@@ -103,6 +103,25 @@ public class CategoryServiceStubTest {
 		assertEquals(child1, service.getRootCategories().get(1));
 	}
 	
+	@Test
+	public void testSaveCategory_ParentUnchanged() {
+		System.out.println("testSaveCategory_ChildToRoot");
+		Category root1 = new Category("Root1", "Description");
+		service.saveCategory(root1);
+		Category child1 = new Category("Child1", "Description", root1);
+		service.saveCategory(child1);
+
+		child1.setName("Another child");
+		assertSame(child1, service.saveCategory(child1));
+		
+		root1.setName("Another root");
+		assertSame(root1, service.saveCategory(root1));
+		
+		assertEquals(1, service.getRootCategories().size());
+		assertEquals(1, service.getChildren(root1).size());
+		assertTrue(service.getChildren(root1).contains(child1));
+	}
+	
 	@Test(expected=IllegalArgumentException.class)
 	public void testSaveCategory_InvalidParent() {
 		System.out.println("testSaveCategory_InvalidParent");

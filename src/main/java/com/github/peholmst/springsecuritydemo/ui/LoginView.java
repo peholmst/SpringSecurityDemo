@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 Petter Holmström
+ * Copyright (c) 2010 The original author(s)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -107,7 +107,6 @@ public class LoginView extends AbstractView {
 	}
 
 	@SuppressWarnings("serial")
-	@Override
 	protected void init() {
 		final Panel loginPanel = new Panel();
 		loginPanel.setCaption(getApplication().getMessage("login.title"));
@@ -127,7 +126,8 @@ public class LoginView extends AbstractView {
 		final Button loginButton = new Button(getApplication().getMessage(
 				"login.button"));
 		loginButton.setStyleName("primary");
-		// TODO Make it possible to submit the form by pressing <Enter> in any of the text fields
+		// TODO Make it possible to submit the form by pressing <Enter> in any
+		// of the text fields
 		loginPanel.addComponent(loginButton);
 		((VerticalLayout) loginPanel.getContent()).setComponentAlignment(
 				loginButton, Alignment.MIDDLE_RIGHT);
@@ -183,17 +183,11 @@ public class LoginView extends AbstractView {
 							Notification.TYPE_WARNING_MESSAGE);
 				} catch (Exception e) {
 					if (logger.isErrorEnabled()) {
-						// This should never happen, therefore we use
-						// ERROR-logging level
-						logger.error("Authentication for user '"
-								+ auth.getName() + "' failed", e);
+						logger
+								.error("Error while attempting authentication for user '"
+										+ auth.getName() + "'");
 					}
-					getWindow().showNotification(
-							getApplication()
-									.getMessage("login.exception.title"),
-							getApplication().getMessage(
-									"login.exception.descr", e.getMessage()),
-							Notification.TYPE_ERROR_MESSAGE);
+					ExceptionUtils.handleException(getWindow(), e);
 				}
 			}
 		});

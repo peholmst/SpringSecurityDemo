@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 Petter Holmström
+ * Copyright (c) 2010 The original author(s)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,14 +32,15 @@ public abstract class AbstractView extends CustomComponent {
 	private static final long serialVersionUID = -1275291398930837578L;
 	private final SpringSecurityDemoApp application;
 	/**
-	 * Comons Log for logging stuff.
+	 * Apache Commons logger for logging stuff.
 	 */
 	protected transient final Log logger = LogFactory.getLog(getClass());
 
 	/**
-	 * Creates a new <code>AbstractView</code>. Subclasses should remember
-	 * to call {@link #init()}.
+	 * Creates a new <code>AbstractView</code>. Subclasses should remember to
+	 * set the composition root of the view.
 	 * 
+	 * @see #setCompositionRoot(com.vaadin.ui.Component)
 	 * @param application
 	 *            the application that owns the view (never <code>null</code>).
 	 */
@@ -48,14 +49,6 @@ public abstract class AbstractView extends CustomComponent {
 		assert application != null : "application must not be null";
 		this.application = application;
 	}
-
-	/**
-	 * Called by a subclass constructor to initialize the view. The implementation must
-	 * set the composition root of the view.
-	 * 
-	 * @see #setCompositionRoot(com.vaadin.ui.Component)
-	 */
-	protected abstract void init();
 
 	/**
 	 * Returns the {@link SpringSecurityDemoApp} that this view belongs to.
@@ -74,7 +67,8 @@ public abstract class AbstractView extends CustomComponent {
 			 * I included this because I wanted to see when views are garbage
 			 * collected.
 			 */
-			logger.debug("Garbage collecting view [" + this + "] owned by [" + application + "]");
+			logger.debug("Garbage collecting view [" + this + "] owned by ["
+					+ application + "]");
 		}
 		super.finalize();
 	}

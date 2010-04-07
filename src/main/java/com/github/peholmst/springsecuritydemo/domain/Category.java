@@ -17,8 +17,6 @@ package com.github.peholmst.springsecuritydemo.domain;
 
 import javax.persistence.Entity;
 import javax.persistence.ManyToOne;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
 
 /**
  * Domain class that represents a category. Categories can be nested.
@@ -30,11 +28,8 @@ public class Category extends AbstractEntity {
 
 	private static final long serialVersionUID = -3513404373476593420L;
 
-	@NotNull
-	@Size(min = 1, max = 200)
 	private String name;
 
-	@NotNull
 	private String description;
 
 	@ManyToOne

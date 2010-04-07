@@ -23,9 +23,6 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Past;
-import javax.validation.constraints.Size;
 
 /**
  * Domain class that represents a Ticket. Tickets always belong to exactly one
@@ -41,31 +38,21 @@ public class Ticket extends AbstractEntity {
 
 	@ManyToOne
 	@JoinColumn(nullable = false)
-	@NotNull
 	private Category category;
 
 	@Temporal(TemporalType.TIMESTAMP)
-	@NotNull
-	@Past
 	private Date openedDate;
 
 	@Temporal(TemporalType.TIMESTAMP)
-	@Past
 	private Date closedDate;
 
 	@Enumerated
-	@NotNull
 	private TicketStatus ticketStatus;
 
-	@NotNull
-	@Size(min = 2, max = 200)
 	private String reporter;
 
-	@NotNull
-	@Size(min = 2, max = 200)
 	private String subject;
 
-	@NotNull
 	private String description;
 
 	public Ticket() {

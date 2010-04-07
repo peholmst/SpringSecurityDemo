@@ -41,7 +41,7 @@ public class CategoryContainer implements Container.Hierarchical, Container.Item
 
 	private static final long serialVersionUID = 1197578205205304787L;
 
-	private transient final CategoryService categoryService;
+	private final CategoryService categoryService;
 
 	private final Map<String, Class<?>> propertyIds;
 	
@@ -259,7 +259,7 @@ public class CategoryContainer implements Container.Hierarchical, Container.Item
 	}
 
 	@Override
-	public Item getItem(Object itemId) {
+	public BeanItem<Category> getItem(Object itemId) {
 		Node node = getNode((String) itemId);
 		return node == null ? null : new BeanItem<Category>(node.getCategory());
 	}

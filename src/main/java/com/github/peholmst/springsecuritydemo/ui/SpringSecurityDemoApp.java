@@ -60,13 +60,13 @@ public class SpringSecurityDemoApp extends Application implements I18nProvider {
 	/**
 	 * Apache Commons logger for logging stuff.
 	 */
-	protected transient final Log logger = LogFactory.getLog(getClass());
+	protected final Log logger = LogFactory.getLog(getClass());
 
 	@Resource
-	private transient MessageSource messages;
+	private MessageSource messages;
 
 	@Resource
-	private transient AuthenticationManager authenticationManager;
+	private AuthenticationManager authenticationManager;
 
 	private LoginView loginView;
 

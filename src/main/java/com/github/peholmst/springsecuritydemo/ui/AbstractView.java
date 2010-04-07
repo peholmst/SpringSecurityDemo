@@ -34,7 +34,7 @@ public abstract class AbstractView extends CustomComponent {
 	/**
 	 * Apache Commons logger for logging stuff.
 	 */
-	protected transient final Log logger = LogFactory.getLog(getClass());
+	protected final Log logger = LogFactory.getLog(getClass());
 
 	/**
 	 * Creates a new <code>AbstractView</code>. Subclasses should remember to

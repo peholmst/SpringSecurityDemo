@@ -15,22 +15,31 @@
  */
 package com.github.peholmst.springsecuritydemo.ui;
 
+import java.util.LinkedList;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.security.access.AccessDeniedException;
 
+import com.github.peholmst.springsecuritydemo.domain.Category;
 import com.github.peholmst.springsecuritydemo.services.CategoryService;
+import com.vaadin.data.Item;
 import com.vaadin.data.Property;
 import com.vaadin.data.Property.ValueChangeEvent;
+import com.vaadin.data.util.BeanItem;
 import com.vaadin.terminal.ThemeResource;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Component;
+import com.vaadin.ui.DefaultFieldFactory;
+import com.vaadin.ui.Field;
+import com.vaadin.ui.Form;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Tree;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Button.ClickEvent;
+import com.vaadin.ui.Window.Notification;
 
 /**
  * This class implements the category browser. Features:
@@ -46,7 +55,34 @@ import com.vaadin.ui.Button.ClickEvent;
  * 
  * @author Petter Holmström
  */
-public class CategoryBrowser {
+public final class CategoryBrowser {
+
+	/*
+	 * Note: I'm sure there are nicer ways of implementing the category browser,
+	 * but at least the implementation is hidden inside this class and can be
+	 * changed without affecting the rest of the application.
+	 */
+
+	/**
+	 * Listener interface to be implemented by classes that want to know when
+	 * the currently selected category is changed.
+	 * 
+	 * @see CategoryBrowser#addListener(CategorySelectionListener)
+	 * @see CategoryBrowser#removeListener(CategorySelectionListener)
+	 * 
+	 * @author Petter Holmström
+	 */
+	public static interface CategorySelectionListener {
+		/**
+		 * Notifies the listener that the currently selected category is
+		 * <code>newCategory</code>.
+		 * 
+		 * @param newCategory
+		 *            the selected category, or <code>null</code> if no category
+		 *            is selected at all.
+		 */
+		public void selectedCategoryChanged(Category newCategory);
+	}
 
 	/**
 	 * Apache Commons logger for logging stuff.
@@ -104,6 +140,43 @@ public class CategoryBrowser {
 		return browserComponent;
 	}
 
+	private LinkedList<CategorySelectionListener> listeners;
+
+	/**
+	 * Adds <code>listener</code> to the list of listeners to be notified when
+	 * the category selection is changed. If the listener is <code>null</code>,
+	 * nothing happens.
+	 * 
+	 * @param listener
+	 *            the listener to add.
+	 */
+	public void addListener(CategorySelectionListener listener) {
+		if (listener == null) {
+			return;
+		}
+		if (listeners == null) {
+			listeners = new LinkedList<CategorySelectionListener>();
+		}
+		listeners.add(listener);
+	}
+
+	/**
+	 * Removes <code>listener</code> from the list of listeners. If the listener
+	 * is <code>null</code> or was never added, nothing happens.
+	 * 
+	 * @param listener
+	 *            the listener to remove.
+	 */
+	public void removeListener(CategorySelectionListener listener) {
+		if (listener == null || listeners == null) {
+			return;
+		}
+		listeners.remove(listener);
+		if (listeners.isEmpty()) {
+			listeners = null;
+		}
+	}
+
 	private Button refreshButton;
 	private Button addButton;
 	private Button editButton;
@@ -113,7 +186,376 @@ public class CategoryBrowser {
 	private CategoryContainer categoryContainer;
 	private Tree categoryTree;
 	private VerticalLayout browserComponent;
+	private CategoryForm categoryForm;
 
+	private static String[] visibleCategoryFormPropertyes = { "name",
+			"description" };
+
+	/**
+	 * This inner class defines a form that can be used to edit existing
+	 * Categories and add new ones.
+	 */
+	private final class CategoryForm {
+
+		private static final long serialVersionUID = -3572755537037975014L;
+		private Form form;
+		private VerticalLayout layout;
+		private Category category;
+		private boolean isNew;
+
+		public CategoryForm() {
+			layout = new VerticalLayout();
+			layout.setVisible(false);
+			layout.setMargin(true);
+		}
+
+		@SuppressWarnings("serial")
+		private void createForm() {
+			layout.removeAllComponents();
+
+			form = new Form();
+			form.setImmediate(true);
+			form.setCaption(getI18nProvider().getMessage(
+				"categories.form.caption"));
+			form.setWriteThrough(false);
+			form.setInvalidCommitted(false);
+
+			form.setFormFieldFactory(new DefaultFieldFactory() {
+				public Field createField(Item item, Object propertyId,
+						Component uiContext) {
+					Field field = super
+						.createField(item, propertyId, uiContext);
+					field.setWidth("100%");
+					if ("name".equals(propertyId)) {
+						field.setRequired(true);
+						field.setRequiredError(getI18nProvider().getMessage(
+							"categories.form.nameEmpty"));
+					}
+					return field;
+				};
+			});
+
+			final HorizontalLayout buttons = new HorizontalLayout();
+			buttons.setSpacing(true);
+
+			final Button saveButton = new Button("Save",
+				new Button.ClickListener() {
+
+					@Override
+					public void buttonClick(ClickEvent event) {
+						/*
+						 * First, we have to commit the form. This will validate
+						 * the data and update the underlying category instance
+						 * upon success.
+						 */
+						try {
+							form.commit();
+						} catch (Exception e) {
+							/*
+							 * The form contains errors, so we abort here and
+							 * let the user fix them. The form will take care of
+							 * displaying the error messages to the user.
+							 */
+							return;
+						}
+						/*
+						 * We now have a category instance with the updated
+						 * data, so now we have to save it using the category
+						 * service.
+						 */
+						try {
+							getCategoryService().saveCategory(category);
+							/*
+							 * Remember to refresh the container, otherwise the
+							 * new/updated category won't show up in the tree.
+							 */
+							categoryContainer.refresh();
+							/*
+							 * Update selection, will update the enablement
+							 * state
+							 */
+							categoryTree.setValue(category.getUUID());
+
+							setVisible(false);
+							getComponent().getWindow().showNotification(
+								getI18nProvider().getMessage(
+									"categories.categorySaved"),
+								Notification.TYPE_TRAY_NOTIFICATION);
+						} catch (AccessDeniedException e) {
+							if (logger.isDebugEnabled()) {
+								logger.debug(
+									"Access denied while attempting to save category ["
+											+ category + "]", e);
+							}
+							if (isNew) {
+								ExceptionUtils.handleException(getComponent()
+									.getWindow(), e, getI18nProvider()
+									.getMessage(
+										"categories.add.accessDenied.descr"));
+							} else {
+								ExceptionUtils.handleException(getComponent()
+									.getWindow(), e, getI18nProvider()
+									.getMessage(
+										"categories.save.accessDenied.descr"));
+							}
+						} catch (OptimisticLockingFailureException e) {
+							if (logger.isDebugEnabled()) {
+								logger.debug(
+									"Optimistic locking failure while attempting to save category ["
+											+ category + "]", e);
+							}
+							ExceptionUtils.handleException(getComponent()
+								.getWindow(), e, getI18nProvider().getMessage(
+								"categories.save.optLockFail.descr"));
+						} catch (Exception e) {
+							if (logger.isErrorEnabled()) {
+								logger.error(
+									"Error while attempting to save category ["
+											+ category + "]", e);
+							}
+							ExceptionUtils.handleException(getComponent()
+								.getWindow(), e);
+						}
+						/*
+						 * Data integrity violation should never occur.
+						 */
+					}
+				});
+			saveButton.setStyleName("primary");
+			buttons.addComponent(saveButton);
+
+			final Button cancelButton = new Button("Cancel",
+				new Button.ClickListener() {
+
+					@Override
+					public void buttonClick(ClickEvent event) {
+						form.discard();
+						setVisible(false);
+					}
+				});
+			buttons.addComponent(cancelButton);
+
+			layout.addComponent(form);
+			layout.addComponent(buttons);
+			layout.setExpandRatio(form, 1.0f);
+			layout.setComponentAlignment(buttons, Alignment.BOTTOM_RIGHT);
+		}
+
+		/**
+		 * Gets the category form component that can be used in user interfaces.
+		 * 
+		 * @return a layout containing the form and buttons.
+		 */
+		public Component getComponent() {
+			return layout;
+		}
+
+		/**
+		 * Shows the form and binds it to <code>category</code>.
+		 * 
+		 * @param category
+		 *            the category to edit.
+		 */
+		public void editCategory(Category category) {
+			createForm();
+			this.category = category;
+			isNew = false;
+			form.setItemDataSource(new BeanItem<Category>(category));
+			form.setVisibleItemProperties(visibleCategoryFormPropertyes);
+			setVisible(true);
+		}
+
+		/**
+		 * Shows the form and binds it to a newly created category.
+		 * 
+		 * @param parent
+		 *            the parent of the category, <code>null</code> to make a
+		 *            new root category.
+		 */
+		public void newCategory(Category parent) {
+			editCategory(new Category());
+			this.category.setParent(parent);
+			isNew = true;
+		}
+
+		/**
+		 * Shows or hides the form.
+		 * 
+		 * @param visible
+		 *            <code>true</code> to show the form, <code>false</code> to
+		 *            hide it.
+		 */
+		public void setVisible(boolean visible) {
+			getComponent().setVisible(visible);
+		}
+	}
+
+	/**
+	 * Refreshes the category browser.
+	 */
+	private void actionRefresh() {
+		try {
+			if (logger.isDebugEnabled()) {
+				logger.debug("Attempting to refresh the category browser");
+			}
+			categoryContainer.refresh();
+			updateEnablementState();
+			getComponent().getWindow().showNotification(
+				getI18nProvider().getMessage("categories.browserRefreshed"),
+				Notification.TYPE_TRAY_NOTIFICATION);
+		} catch (Exception e) {
+			if (logger.isErrorEnabled()) {
+				logger
+					.error(
+						"Error while attempting to refresh the category browser",
+						e);
+			}
+			ExceptionUtils.handleException(getComponent().getWindow(), e);
+		}
+	}
+
+	/**
+	 * Edits the selected category. If no category is selected, this method does
+	 * nothing.
+	 */
+	private void actionEdit() {
+		final String selectedCategoryUUID = (String) categoryTree.getValue();
+		if (selectedCategoryUUID != null) {
+			if (logger.isDebugEnabled()) {
+				logger.debug("Attempting to show edit form for category '"
+						+ selectedCategoryUUID + "'");
+			}
+			BeanItem<Category> categoryItem = categoryContainer
+				.getItem(selectedCategoryUUID);
+			if (categoryItem != null) {
+				categoryForm.editCategory(categoryItem.getBean());
+			} else {
+				actionRefresh();
+			}
+		}
+	}
+
+	/**
+	 * Adds a new sub category to the selected category. If no category is
+	 * selected, a new root category is created.
+	 */
+	private void actionAdd() {
+		final String selectedCategoryUUID = (String) categoryTree.getValue();
+		if (logger.isDebugEnabled()) {
+			logger.debug("Attempting to show edit form for a new category");
+		}
+		if (selectedCategoryUUID == null) {
+			// new root item
+			categoryForm.newCategory(null);
+		} else {
+			BeanItem<Category> categoryItem = categoryContainer
+				.getItem(selectedCategoryUUID);
+			if (categoryItem != null) {
+				categoryForm.newCategory(categoryItem.getBean());
+			} else {
+				actionRefresh();
+			}
+		}
+	}
+
+	/**
+	 * Deletes the selected category. If no category is selected, this method
+	 * does nothing.
+	 */
+	private void actionDelete() {
+		final String selectedCategoryUUID = (String) categoryTree.getValue();
+		if (selectedCategoryUUID != null) {
+			if (logger.isDebugEnabled()) {
+				logger.debug("Attempting to delete category '"
+						+ selectedCategoryUUID + "'");
+			}
+			try {
+				getCategoryService().deleteCategoryByUUID(selectedCategoryUUID);
+				/*
+				 * Remember to refresh the container, otherwise the old category
+				 * will remain in the tree.
+				 */
+				categoryContainer.refresh();
+				/*
+				 * Clear selection, will update the enablement state
+				 */
+				categoryTree.setValue(null);
+				getComponent().getWindow().showNotification(
+					getI18nProvider().getMessage("categories.categoryDeleted"),
+					Notification.TYPE_TRAY_NOTIFICATION);
+			} catch (AccessDeniedException e) {
+				if (logger.isDebugEnabled()) {
+					logger.debug(
+						"Access denied while attempting to delete category '"
+								+ selectedCategoryUUID + "'", e);
+				}
+				ExceptionUtils.handleException(getComponent().getWindow(), e,
+					getI18nProvider().getMessage(
+						"categories.delete.accessDenied.descr"));
+			} catch (OptimisticLockingFailureException e) {
+				if (logger.isDebugEnabled()) {
+					logger.debug(
+						"Optimistic locking failure while attempting to delete category '"
+								+ selectedCategoryUUID + "'", e);
+				}
+				ExceptionUtils.handleException(getComponent().getWindow(), e,
+					getI18nProvider().getMessage(
+						"categories.delete.optLockFail.descr"));
+			} catch (Exception e) {
+				if (logger.isErrorEnabled()) {
+					logger.error("Error while attempting to delete category '"
+							+ selectedCategoryUUID + "'", e);
+				}
+				ExceptionUtils.handleException(getComponent().getWindow(), e);
+			}
+			/*
+			 * Data integrity violation should never occur.
+			 */
+		}
+	}
+
+	/**
+	 * Shows the access control list for the selected category. If no category
+	 * is selected, this method does nothing.
+	 */
+	private void actionACL() {
+		// TODO Implement me!
+		getComponent().getWindow().showNotification("Not implemented yet!");
+	}
+
+	/**
+	 * Shows the audit log for the selected category. If no category is
+	 * selected, this method does nothing.
+	 */
+	private void actionAudit() {
+		// TODO Implement me!
+		getComponent().getWindow().showNotification("Not implemented yet!");
+	}
+
+	/**
+	 * Updates the enablement state of the toolbar buttons and hides the
+	 * category form.
+	 */
+	private void updateEnablementState() {
+		// Get selection
+		boolean hasSelection = categoryTree.getValue() != null;
+		/*
+		 * In a real application, security checks should be included here as
+		 * well in order to disable functions that the user is not allowed to
+		 * perform. In this demo, it is possible to try to perform illegal
+		 * operations just to demonstrate that the security features are
+		 * working.
+		 */
+		editButton.setEnabled(hasSelection);
+		deleteButton.setEnabled(hasSelection);
+		aclButton.setEnabled(hasSelection);
+		auditButton.setEnabled(hasSelection);
+		categoryForm.setVisible(false);
+	}
+
+	/**
+	 * Creates the category browser component.
+	 */
 	@SuppressWarnings("serial")
 	private void createComponent() {
 		categoryContainer = new CategoryContainer(getCategoryService());
@@ -124,10 +566,18 @@ public class CategoryBrowser {
 		 * service.
 		 */
 		categoryTree = new Tree();
-		categoryTree.setSizeFull();
-		categoryTree.setContainerDataSource(categoryContainer);
-		categoryTree.setItemCaptionPropertyId("name");
-		categoryTree.setImmediate(true);
+		{
+			categoryTree.setSizeFull();
+			categoryTree.setContainerDataSource(categoryContainer);
+			categoryTree.setItemCaptionPropertyId("name");
+			categoryTree.setImmediate(true);
+		}
+
+		/*
+		 * The form for editing categories is hidden by default and is shown
+		 * when the user clicks the edit or add button.
+		 */
+		categoryForm = new CategoryForm();
 
 		/*
 		 * The toolbar will be placed at the bottom of the browser and contains
@@ -143,27 +593,12 @@ public class CategoryBrowser {
 			refreshButton.setIcon(new ThemeResource("icons/16/refresh.png"));
 			refreshButton.setStyleName("small");
 			refreshButton.setDescription(getI18nProvider().getMessage(
-					"categories.refresh.descr"));
+				"categories.refresh.descr"));
 			refreshButton.addListener(new Button.ClickListener() {
 
 				@Override
 				public void buttonClick(ClickEvent event) {
-					try {
-						if (logger.isDebugEnabled()) {
-							logger
-									.debug("Attempting to refresh the category browser");
-						}
-						categoryContainer.refresh();
-					} catch (Exception e) {
-						if (logger.isErrorEnabled()) {
-							logger
-									.error(
-											"Error while attempting to refresh the category browser",
-											e);
-						}
-						ExceptionUtils.handleException(getComponent()
-								.getWindow(), e);
-					}
+					actionRefresh();
 				}
 			});
 			toolbar.addComponent(refreshButton);
@@ -176,14 +611,12 @@ public class CategoryBrowser {
 			addButton.setIcon(new ThemeResource("icons/16/add.png"));
 			addButton.setStyleName("small");
 			addButton.setDescription(getI18nProvider().getMessage(
-					"categories.add.descr"));
+				"categories.add.descr"));
 			addButton.addListener(new Button.ClickListener() {
 
 				@Override
 				public void buttonClick(ClickEvent event) {
-					// TODO Implement me!
-					getComponent().getWindow().showNotification(
-							"Not implemented yet!");
+					actionAdd();
 				}
 			});
 			toolbar.addComponent(addButton);
@@ -195,15 +628,13 @@ public class CategoryBrowser {
 			editButton.setIcon(new ThemeResource("icons/16/pencil.png"));
 			editButton.setStyleName("small");
 			editButton.setDescription(getI18nProvider().getMessage(
-					"categories.edit.descr"));
+				"categories.edit.descr"));
 			editButton.setEnabled(false);
 			editButton.addListener(new Button.ClickListener() {
 
 				@Override
 				public void buttonClick(ClickEvent event) {
-					// TODO Implement me!
-					getComponent().getWindow().showNotification(
-							"Not implemented yet!");
+					actionEdit();
 				}
 			});
 			toolbar.addComponent(editButton);
@@ -215,74 +646,13 @@ public class CategoryBrowser {
 			deleteButton.setIcon(new ThemeResource("icons/16/delete.png"));
 			deleteButton.setStyleName("small");
 			deleteButton.setDescription(getI18nProvider().getMessage(
-					"categories.delete.descr"));
+				"categories.delete.descr"));
 			deleteButton.setEnabled(false);
 			deleteButton.addListener(new Button.ClickListener() {
 
 				@Override
 				public void buttonClick(ClickEvent event) {
-					final String selectedCategoryUUID = (String) categoryTree
-							.getValue();
-					if (selectedCategoryUUID != null) {
-						if (logger.isDebugEnabled()) {
-							logger.debug("Attempting to delete category '"
-									+ selectedCategoryUUID + "'");
-						}
-						try {
-							getCategoryService().deleteCategoryByUUID(
-									selectedCategoryUUID);
-							/*
-							 * Remember to refresh the container, otherwise the
-							 * old category will remain in the tree.
-							 */
-							categoryContainer.refresh();
-							/*
-							 * Clear selection
-							 */
-							categoryTree.setValue(null);
-						} catch (AccessDeniedException e) {
-							if (logger.isDebugEnabled()) {
-								logger
-										.debug(
-												"Access denied while attempting to delete category '"
-														+ selectedCategoryUUID
-														+ "'", e);
-							}
-							ExceptionUtils
-									.handleException(
-											getComponent().getWindow(),
-											e,
-											getI18nProvider()
-													.getMessage(
-															"categories.delete.accessDenied.descr"));
-						} catch (OptimisticLockingFailureException e) {
-							if (logger.isDebugEnabled()) {
-								logger
-										.debug(
-												"Optimistic locking failure while attempting to delete category '"
-														+ selectedCategoryUUID
-														+ "'", e);
-							}
-							ExceptionUtils
-									.handleException(
-											getComponent().getWindow(),
-											e,
-											getI18nProvider()
-													.getMessage(
-															"categories.delete.optLockFail.descr"));
-						} catch (Exception e) {
-							if (logger.isErrorEnabled()) {
-								logger
-										.error(
-												"Error while attempting to delete category '"
-														+ selectedCategoryUUID
-														+ "'", e);
-							}
-							ExceptionUtils.handleException(getComponent()
-									.getWindow(), e);
-						}
-					}
-
+					actionDelete();
 				}
 			});
 			toolbar.addComponent(deleteButton);
@@ -295,15 +665,13 @@ public class CategoryBrowser {
 			aclButton.setIcon(new ThemeResource("icons/16/lock_edit.png"));
 			aclButton.setStyleName("small");
 			aclButton.setDescription(getI18nProvider().getMessage(
-					"categories.acl.descr"));
+				"categories.acl.descr"));
 			aclButton.setEnabled(false);
 			aclButton.addListener(new Button.ClickListener() {
 
 				@Override
 				public void buttonClick(ClickEvent event) {
-					// TODO Implement me!
-					getComponent().getWindow().showNotification(
-							"Not implemented yet!");
+					actionACL();
 				}
 			});
 			toolbar.addComponent(aclButton);
@@ -315,15 +683,13 @@ public class CategoryBrowser {
 			auditButton.setIcon(new ThemeResource("icons/16/key.png"));
 			auditButton.setStyleName("small");
 			auditButton.setDescription(getI18nProvider().getMessage(
-					"categories.audit.descr"));
+				"categories.audit.descr"));
 			auditButton.setEnabled(false);
 			auditButton.addListener(new Button.ClickListener() {
 
 				@Override
 				public void buttonClick(ClickEvent event) {
-					// TODO Implement me!
-					getComponent().getWindow().showNotification(
-							"Not implemented yet!");
+					actionAudit();
 				}
 			});
 			toolbar.addComponent(auditButton);
@@ -335,31 +701,52 @@ public class CategoryBrowser {
 		browserComponent = new VerticalLayout();
 		browserComponent.setSizeFull();
 		browserComponent.addComponent(categoryTree);
+		browserComponent.addComponent(categoryForm.getComponent());
 		browserComponent.addComponent(toolbar);
 		browserComponent.setExpandRatio(categoryTree, 1.0f);
 		browserComponent
-				.setComponentAlignment(toolbar, Alignment.BOTTOM_CENTER);
+			.setComponentAlignment(toolbar, Alignment.BOTTOM_CENTER);
 
-		// Register some listeners
+		/*
+		 * Register a listener that updates the enablement state every time the
+		 * selection changes.
+		 */
 		categoryTree.addListener(new Property.ValueChangeListener() {
 
 			@Override
 			public void valueChange(ValueChangeEvent event) {
-				// Get selection
-				boolean hasSelection = categoryTree.getValue() != null;
-				/*
-				 * In a real application, security checks should be included
-				 * here as well in order to disable functions that the user is
-				 * not allowed to perform. In this demo, it is possible to try
-				 * to perform illegal operations just to demonstrate that the
-				 * security features are working.
-				 */
-				editButton.setEnabled(hasSelection);
-				deleteButton.setEnabled(hasSelection);
-				aclButton.setEnabled(hasSelection);
-				auditButton.setEnabled(hasSelection);
+				updateEnablementState();
+				String newCategoryUUID = (String) event.getProperty()
+					.getValue();
+				Category newCategory = null;
+				if (newCategoryUUID != null) {
+					BeanItem<Category> item = categoryContainer
+						.getItem(newCategoryUUID);
+					if (item != null) {
+						newCategory = item.getBean();
+					}
+				}
+				fireCategorySelectionChanged(newCategory);
 			}
 		});
+	}
+
+	@SuppressWarnings("unchecked")
+	private void fireCategorySelectionChanged(Category newCategory) {
+		if (listeners == null) {
+			return;
+		}
+		/*
+		 * Iterate over a cloned list instead of the list itself to avoid
+		 * strange behavior if any of the listeners add additional listeners or
+		 * remove existing ones.
+		 */
+		LinkedList<CategorySelectionListener> clonedList = (LinkedList<CategorySelectionListener>) listeners
+			.clone();
+		for (CategorySelectionListener listener : clonedList) {
+			listener.selectedCategoryChanged(newCategory);
+		}
+
 	}
 
 }

@@ -35,7 +35,7 @@ import com.vaadin.ui.Button.ClickEvent;
  * @author petter
  * 
  */
-public class MainView extends AbstractView {
+public class MainView extends AbstractView implements CategoryBrowser.CategorySelectionListener {
 
 	private static final long serialVersionUID = -8421758733452231380L;
 
@@ -47,6 +47,7 @@ public class MainView extends AbstractView {
 		super(application);
 		categoryService = createCategoryServiceStub();
 		categoryBrowser = new CategoryBrowser(categoryService, application);
+		categoryBrowser.addListener(this);
 		init();
 	}
 
@@ -80,6 +81,12 @@ public class MainView extends AbstractView {
 		splitPanel.setSplitPosition(25, Sizeable.UNITS_PERCENTAGE);
 
 		setCompositionRoot(mainLayout);
+	}
+	
+	@Override
+	public void selectedCategoryChanged(Category newCategory) {
+		// TODO Update the ticket browser!
+		getWindow().showNotification("Selected category: " + newCategory);		
 	}
 
 	// TODO Remove this - For demonstrational purposes only

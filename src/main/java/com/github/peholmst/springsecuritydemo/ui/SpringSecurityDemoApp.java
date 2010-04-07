@@ -53,12 +53,12 @@ import com.vaadin.ui.Component.Event;
  */
 @Component("applicationBean")
 @Scope("prototype")
-public class SpringSecurityDemoApp extends Application {
+public class SpringSecurityDemoApp extends Application implements I18nProvider {
 
 	private static final long serialVersionUID = -1412284137848857188L;
 
 	/**
-	 * Commons Log for logging stuff.
+	 * Apache Commons logger for logging stuff.
 	 */
 	protected transient final Log logger = LogFactory.getLog(getClass());
 
@@ -135,7 +135,8 @@ public class SpringSecurityDemoApp extends Application {
 	}
 
 	@Override
-	@PreDestroy // In case the application is destroyed by the container
+	@PreDestroy
+	// In case the application is destroyed by the container
 	public void close() {
 		if (logger.isDebugEnabled()) {
 			logger.debug("Closing application [" + this + "]");
@@ -174,52 +175,18 @@ public class SpringSecurityDemoApp extends Application {
 		return VersionInfo.getApplicationVersion();
 	}
 
-	/**
-	 * Tries to resolve the message using the locale returned by
-	 * {@link #getLocale()}.
-	 * 
-	 * @see MessageSource#getMessage(String, Object[], Locale)
-	 * 
-	 * @param code
-	 *            the code to look up.
-	 * @param args
-	 *            array of arguments that will be filled in for params within
-	 *            the message (params look like "{0}", "{1,date}", "{2,time}"),
-	 *            or <code>null</code> if there are none.
-	 * @return the resolved message (never <code>null</code>).
-	 * @throws NoSuchMessageException
-	 *             if the message could not be resolved.
-	 */
+	@Override
 	public String getMessage(String code, Object... args)
 			throws NoSuchMessageException {
 		return messages.getMessage(code, args, getLocale());
 	}
 
-	/**
-	 * Gets all the locales that this application supports. More specifically,
-	 * the application's UI can be shown in any of the locales returned by this
-	 * method.
-	 * 
-	 * @see #getLocaleDisplayName(Locale)
-	 * @return an array of {@link Locale}s.
-	 */
+	@Override
 	public Locale[] getSupportedLocales() {
 		return SUPPORTED_LOCALES;
 	}
 
-	/**
-	 * Gets the name of <code>locale</code> to display in the user interface.
-	 * Each locale is shown in its own language. For example, the "en_US" locale
-	 * returns "English", the "fi_FI" locale "Suomi", etc.
-	 * <p>
-	 * If <code>locale</code> is not in the array returned by
-	 * {@link #getSupportedLocales()}, an "Unsuppored Locale" string is
-	 * returned.
-	 * 
-	 * @param locale
-	 *            the locale whose display name should be returned.
-	 * @return the display name of the locale.
-	 */
+	@Override
 	public String getLocaleDisplayName(Locale locale) {
 		for (int i = 0; i < SUPPORTED_LOCALES.length; i++) {
 			if (locale.equals(SUPPORTED_LOCALES[i])) {

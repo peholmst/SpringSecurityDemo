@@ -33,6 +33,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import com.github.peholmst.springsecuritydemo.VersionInfo;
+import com.github.peholmst.springsecuritydemo.services.CategoryService;
 import com.vaadin.Application;
 import com.vaadin.ui.Window;
 import com.vaadin.ui.Component.Event;
@@ -68,6 +69,9 @@ public class SpringSecurityDemoApp extends Application implements I18nProvider {
 	@Resource
 	private AuthenticationManager authenticationManager;
 
+	@Resource
+	private CategoryService categoryService;
+	
 	private LoginView loginView;
 
 	private MainView mainView;
@@ -125,7 +129,7 @@ public class SpringSecurityDemoApp extends Application implements I18nProvider {
 							((LoginView.LoginEvent) event).getAuthentication());
 					removeWindow(loginWindow);
 					loginView = null;
-					mainView = new MainView(SpringSecurityDemoApp.this);
+					mainView = new MainView(SpringSecurityDemoApp.this, categoryService);
 					mainView.setSizeFull();
 					setMainWindow(new Window(getMessage("app.title",
 							getVersion()), mainView));

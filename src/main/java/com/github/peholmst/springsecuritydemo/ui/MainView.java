@@ -17,7 +17,6 @@ package com.github.peholmst.springsecuritydemo.ui;
 
 import com.github.peholmst.springsecuritydemo.domain.Category;
 import com.github.peholmst.springsecuritydemo.services.CategoryService;
-import com.github.peholmst.springsecuritydemo.services.stubs.CategoryServiceStub;
 import com.vaadin.terminal.Sizeable;
 import com.vaadin.terminal.ThemeResource;
 import com.vaadin.ui.Alignment;
@@ -39,18 +38,15 @@ public class MainView extends AbstractView implements CategoryBrowser.CategorySe
 
 	private static final long serialVersionUID = -8421758733452231380L;
 
-	private final CategoryService categoryService;
-
 	private final CategoryBrowser categoryBrowser;
 	
-	public MainView(SpringSecurityDemoApp application) {
+	public MainView(SpringSecurityDemoApp application, CategoryService categoryService) {
 		super(application);
-		categoryService = createCategoryServiceStub();
 		categoryBrowser = new CategoryBrowser(categoryService, application);
 		categoryBrowser.addListener(this);
 		init();
 	}
-
+	
 	protected void init() {
 		final VerticalLayout mainLayout = new VerticalLayout();
 		mainLayout.setSizeFull();
@@ -90,7 +86,7 @@ public class MainView extends AbstractView implements CategoryBrowser.CategorySe
 	}
 
 	// TODO Remove this - For demonstrational purposes only
-	private CategoryService createCategoryServiceStub() {
+/*	private CategoryService createCategoryServiceStub() {
 		CategoryService service = new CategoryServiceStub();
 		for (int i = 1; i <= 5; ++i) {
 			Category r = new Category();
@@ -104,7 +100,7 @@ public class MainView extends AbstractView implements CategoryBrowser.CategorySe
 			}
 		}
 		return service;
-	}
+	}*/
 
 	/**
 	 * TODO Document me!

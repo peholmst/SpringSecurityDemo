@@ -17,9 +17,6 @@ package com.github.peholmst.springsecuritydemo.services;
 
 import java.util.List;
 
-import org.springframework.security.access.prepost.PostFilter;
-import org.springframework.security.access.prepost.PreAuthorize;
-
 import com.github.peholmst.springsecuritydemo.domain.Category;
 
 /**
@@ -29,7 +26,7 @@ import com.github.peholmst.springsecuritydemo.domain.Category;
  */
 public interface CategoryService {
 
-	// TODO document the security annotations
+	// TODO add & document security annotations
 
 	/**
 	 * Gets all root categories, i.e. categories that do not have parents (
@@ -38,8 +35,6 @@ public interface CategoryService {
 	 * @return an unmodifiable list containing all the root categories (never
 	 *         <code>null</code>).
 	 */
-	@PreAuthorize("hasRole('ROLE_USER'")
-	@PostFilter("hasPermission(filterObject, 'read')")
 	public List<Category> getRootCategories();
 
 	/**
@@ -52,8 +47,6 @@ public interface CategoryService {
 	 *         <code>parent</code>, or <code>null</code> if <code>parent</code>
 	 *         could not be found.
 	 */
-	@PreAuthorize("hasRole('ROLE_USER') and hasPermission(#parent, 'read')")
-	@PostFilter("hasPermission(filterObject, 'read'")
 	public List<Category> getChildren(Category parent);
 
 	/**

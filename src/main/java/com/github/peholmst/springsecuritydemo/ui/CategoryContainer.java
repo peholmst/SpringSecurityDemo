@@ -43,7 +43,7 @@ import com.vaadin.data.util.BeanItem;
  * The container is read-only, i.e. changes have to be made to the category
  * service directly.
  * <p>
- * The category UUID ({@link Category#getUUID()}) is used as the Item ID.
+ * The category id ({@link Category#getId()}) is used as the Item ID.
  * 
  * @author Petter Holmström
  */
@@ -99,7 +99,7 @@ public class CategoryContainer implements Container.Hierarchical,
 	protected class Node {
 		private Node parent;
 		private List<Node> children;
-		private List<String> childrenUUIDs;
+		private List<Long> childrenIds;
 		private long lastUpdated;
 		private Category category;
 
@@ -139,29 +139,29 @@ public class CategoryContainer implements Container.Hierarchical,
 		public List<Node> getChildren() {
 			if (children == null) {
 				children = new LinkedList<Node>();
-				childrenUUIDs = new LinkedList<String>();
+				childrenIds = new LinkedList<Long>();
 				List<Category> childCategories = getCategoryService()
 					.getChildren(category);
 				for (Category c : childCategories) {
 					children.add(getNode(c));
-					childrenUUIDs.add(c.getUUID());
+					childrenIds.add(c.getId());
 				}
 				children = Collections.unmodifiableList(children);
-				childrenUUIDs = Collections.unmodifiableList(childrenUUIDs);
+				childrenIds = Collections.unmodifiableList(childrenIds);
 			}
 			return children;
 		}
 
 		/**
-		 * Gets the UUIDs of all the child categories.
+		 * Gets the IDs of all the child categories.
 		 * 
-		 * @return an unmodifiable list of child UUIDs.
+		 * @return an unmodifiable list of child IDs.
 		 */
-		public List<String> getChildrenUUIDs() {
-			if (childrenUUIDs == null) {
+		public List<Long> getChildrenIds() {
+			if (childrenIds == null) {
 				getChildren();
 			}
-			return childrenUUIDs;
+			return childrenIds;
 		}
 
 		/**
@@ -185,43 +185,43 @@ public class CategoryContainer implements Container.Hierarchical,
 		}
 	}
 
-	private Map<String, Node> uuidToNodeMap = Collections.emptyMap();
+	private Map<Long, Node> idToNodeMap = Collections.emptyMap();
 
-	private List<String> rootUUIDs = Collections.emptyList();
+	private List<Long> rootIds = Collections.emptyList();
 
 	/**
 	 * Refreshes the container and fires a {@link ContainerRefreshedEvent}.
 	 */
 	public void refresh() {
-		rootUUIDs = new LinkedList<String>();
-		uuidToNodeMap = new HashMap<String, Node>();
+		rootIds = new LinkedList<Long>();
+		idToNodeMap = new HashMap<Long, Node>();
 		for (Category c : getCategoryService().getRootCategories()) {
-			rootUUIDs.add(c.getUUID());
+			rootIds.add(c.getId());
 		}
-		rootUUIDs = Collections.unmodifiableList(rootUUIDs);
+		rootIds = Collections.unmodifiableList(rootIds);
 		fireItemSetChange(new ContainerRefreshedEvent());
 	}
 
 	/**
-	 * Gets the node identified by <code>uuid</code>. The first time this method
+	 * Gets the node identified by <code>id</code>. The first time this method
 	 * is called, the category is fetched from the category service.
 	 * 
-	 * @param uuid
-	 *            the UUID of the node to fetch (must not be <code>null</code>).
+	 * @param id
+	 *            the ID of the node to fetch (must not be <code>null</code>).
 	 * @return the node, or <code>null</code> if it could not be found.
 	 */
-	protected Node getNode(String uuid) {
-		assert uuid != null : "uuid must not be null";
-		Node node = uuidToNodeMap.get(uuid);
+	protected Node getNode(Long id) {
+		assert id != null : "id must not be null";
+		Node node = idToNodeMap.get(id);
 		if (node == null) {
-			Category c = getCategoryService().getCategoryByUUID(uuid);
+			Category c = getCategoryService().getCategoryById(id);
 			if (c == null) {
 				return null;
 			}
 			Node parentNode = c.getParent() == null ? null : getNode(c
-				.getParent().getUUID());
+				.getParent().getId());
 			node = new Node(parentNode, c);
-			uuidToNodeMap.put(uuid, node);
+			idToNodeMap.put(id, node);
 		}
 		return node;
 	}
@@ -237,12 +237,12 @@ public class CategoryContainer implements Container.Hierarchical,
 	 */
 	protected Node getNode(Category category) {
 		assert category != null : "category must not be null";
-		Node node = uuidToNodeMap.get(category.getUUID());
+		Node node = idToNodeMap.get(category.getId());
 		if (node == null) {
 			Node parentNode = category.getParent() == null ? null
-					: getNode(category.getParent().getUUID());
+					: getNode(category.getParent().getId());
 			node = new Node(parentNode, category);
-			uuidToNodeMap.put(category.getUUID(), node);
+			idToNodeMap.put(category.getId(), node);
 		}
 		return node;
 
@@ -255,20 +255,20 @@ public class CategoryContainer implements Container.Hierarchical,
 
 	@Override
 	public Collection<?> getChildren(Object itemId) {
-		Node node = getNode((String) itemId);
-		return node == null ? null : node.getChildrenUUIDs();
+		Node node = getNode((Long) itemId);
+		return node == null ? null : node.getChildrenIds();
 	}
 
 	@Override
 	public Object getParent(Object itemId) {
-		Node node = getNode((String) itemId);
+		Node node = getNode((Long) itemId);
 		return (node == null || node.getParent() == null) ? null : node
-			.getParent().getCategory().getUUID();
+			.getParent().getCategory().getId();
 	}
 
 	@Override
 	public boolean hasChildren(Object itemId) {
-		Node node = getNode((String) itemId);
+		Node node = getNode((Long) itemId);
 		return node == null ? false : !node.getChildren().isEmpty();
 	}
 
@@ -289,8 +289,8 @@ public class CategoryContainer implements Container.Hierarchical,
 	}
 
 	@Override
-	public Collection<String> rootItemIds() {
-		return rootUUIDs;
+	public Collection<Long> rootItemIds() {
+		return rootIds;
 	}
 
 	/**
@@ -348,7 +348,7 @@ public class CategoryContainer implements Container.Hierarchical,
 
 	@Override
 	public boolean containsId(Object itemId) {
-		return getNode((String) itemId) != null;
+		return getNode((Long) itemId) != null;
 	}
 
 	@Override
@@ -364,7 +364,7 @@ public class CategoryContainer implements Container.Hierarchical,
 
 	@Override
 	public BeanItem<Category> getItem(Object itemId) {
-		Node node = getNode((String) itemId);
+		Node node = getNode((Long) itemId);
 		return node == null ? null : new BeanItem<Category>(node.getCategory());
 	}
 

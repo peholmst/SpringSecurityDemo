@@ -264,7 +264,7 @@ public final class CategoryBrowser {
 						 * service.
 						 */
 						try {
-							getCategoryService().saveCategory(category);
+							category = getCategoryService().saveCategory(category);
 							/*
 							 * Remember to refresh the container, otherwise the
 							 * new/updated category won't show up in the tree.
@@ -274,7 +274,7 @@ public final class CategoryBrowser {
 							 * Update selection, will update the enablement
 							 * state
 							 */
-							categoryTree.setValue(category.getUUID());
+							categoryTree.setValue(category.getId());
 
 							setVisible(false);
 							getComponent().getWindow().showNotification(
@@ -419,14 +419,14 @@ public final class CategoryBrowser {
 	 * nothing.
 	 */
 	private void actionEdit() {
-		final String selectedCategoryUUID = (String) categoryTree.getValue();
-		if (selectedCategoryUUID != null) {
+		final Long selectedCategoryId = (Long) categoryTree.getValue();
+		if (selectedCategoryId != null) {
 			if (logger.isDebugEnabled()) {
 				logger.debug("Attempting to show edit form for category '"
-						+ selectedCategoryUUID + "'");
+						+ selectedCategoryId + "'");
 			}
 			BeanItem<Category> categoryItem = categoryContainer
-				.getItem(selectedCategoryUUID);
+				.getItem(selectedCategoryId);
 			if (categoryItem != null) {
 				categoryForm.editCategory(categoryItem.getBean());
 			} else {
@@ -440,16 +440,16 @@ public final class CategoryBrowser {
 	 * selected, a new root category is created.
 	 */
 	private void actionAdd() {
-		final String selectedCategoryUUID = (String) categoryTree.getValue();
+		final Long selectedCategoryId = (Long) categoryTree.getValue();
 		if (logger.isDebugEnabled()) {
 			logger.debug("Attempting to show edit form for a new category");
 		}
-		if (selectedCategoryUUID == null) {
+		if (selectedCategoryId == null) {
 			// new root item
 			categoryForm.newCategory(null);
 		} else {
 			BeanItem<Category> categoryItem = categoryContainer
-				.getItem(selectedCategoryUUID);
+				.getItem(selectedCategoryId);
 			if (categoryItem != null) {
 				categoryForm.newCategory(categoryItem.getBean());
 			} else {
@@ -463,14 +463,17 @@ public final class CategoryBrowser {
 	 * does nothing.
 	 */
 	private void actionDelete() {
-		final String selectedCategoryUUID = (String) categoryTree.getValue();
-		if (selectedCategoryUUID != null) {
+		final Long selectedCategoryId = (Long) categoryTree.getValue();
+		if (selectedCategoryId != null) {
 			if (logger.isDebugEnabled()) {
 				logger.debug("Attempting to delete category '"
-						+ selectedCategoryUUID + "'");
+						+ selectedCategoryId + "'");
 			}
 			try {
-				getCategoryService().deleteCategoryByUUID(selectedCategoryUUID);
+				Category c = getCategoryService().getCategoryById(selectedCategoryId);
+				if (c != null) {
+					getCategoryService().deleteCategory(c);
+				}
 				/*
 				 * Remember to refresh the container, otherwise the old category
 				 * will remain in the tree.
@@ -487,7 +490,7 @@ public final class CategoryBrowser {
 				if (logger.isDebugEnabled()) {
 					logger.debug(
 						"Access denied while attempting to delete category '"
-								+ selectedCategoryUUID + "'", e);
+								+ selectedCategoryId + "'", e);
 				}
 				ExceptionUtils.handleException(getComponent().getWindow(), e,
 					getI18nProvider().getMessage(
@@ -496,7 +499,7 @@ public final class CategoryBrowser {
 				if (logger.isDebugEnabled()) {
 					logger.debug(
 						"Optimistic locking failure while attempting to delete category '"
-								+ selectedCategoryUUID + "'", e);
+								+ selectedCategoryId + "'", e);
 				}
 				ExceptionUtils.handleException(getComponent().getWindow(), e,
 					getI18nProvider().getMessage(
@@ -504,7 +507,7 @@ public final class CategoryBrowser {
 			} catch (Exception e) {
 				if (logger.isErrorEnabled()) {
 					logger.error("Error while attempting to delete category '"
-							+ selectedCategoryUUID + "'", e);
+							+ selectedCategoryId + "'", e);
 				}
 				ExceptionUtils.handleException(getComponent().getWindow(), e);
 			}
@@ -716,12 +719,12 @@ public final class CategoryBrowser {
 			@Override
 			public void valueChange(ValueChangeEvent event) {
 				updateEnablementState();
-				String newCategoryUUID = (String) event.getProperty()
+				Long newCategoryId = (Long) event.getProperty()
 					.getValue();
 				Category newCategory = null;
-				if (newCategoryUUID != null) {
+				if (newCategoryId != null) {
 					BeanItem<Category> item = categoryContainer
-						.getItem(newCategoryUUID);
+						.getItem(newCategoryId);
 					if (item != null) {
 						newCategory = item.getBean();
 					}

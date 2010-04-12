@@ -69,29 +69,13 @@ public class CategoryServiceImpl implements CategoryService {
 	}
 	
 	@Override
-	@Transactional
-	public void deleteCategoryByUUID(String uuid) {
-		assert uuid != null : "uuid must not be null";
-		if (logger.isDebugEnabled()) {
-			logger.debug("Deleting category identified by UUID '" + uuid + "'");
-		}
-		Category c = getEntityManager().find(Category.class, uuid);
-		if (c != null) {
-			getEntityManager().remove(c);
-			getEntityManager().flush();
-		} else if (logger.isDebugEnabled()) {
-			logger.debug("Category '" + uuid + "' not found");
-		}
-	}
-
-	@Override
 	@Transactional(readOnly = true)
-	public Category getCategoryByUUID(String uuid) {
-		assert uuid != null : "uuid must not be null";
+	public Category getCategoryById(Long id) {
+		assert id != null : "id must not be null";
 		if (logger.isDebugEnabled()) {
-			logger.debug("Retrieving category identified by '" + uuid + "'");
+			logger.debug("Retrieving category identified by '" + id + "'");
 		}
-		return getEntityManager().find(Category.class, uuid);
+		return getEntityManager().find(Category.class, id);
 	}
 
 	@Override

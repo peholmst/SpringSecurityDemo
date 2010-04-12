@@ -17,7 +17,6 @@ package com.github.peholmst.springsecuritydemo.domain;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 import java.beans.BeanInfo;
@@ -70,9 +69,9 @@ public abstract class AbstractEntityTest<T extends AbstractEntity> {
 	}
 
 	@Test
-	public void testInitialUUIDValue() {
-		System.out.println("testInitialUUIDValue");
-		assertNotNull("Initial UUID should not be null", getEntity().getUUID());
+	public void testInitialIdValue() {
+		System.out.println("testInitialIdValue");
+		assertNull("Initial id should be null", getEntity().getId());
 	}
 
 	@Test
@@ -128,7 +127,7 @@ public abstract class AbstractEntityTest<T extends AbstractEntity> {
 		T otherBean = createEntity();
 		BeanInfo info = Introspector.getBeanInfo(getEntity().getClass());
 		for (PropertyDescriptor pd : info.getPropertyDescriptors()) {
-			if (pd.getWriteMethod() != null) {
+			if (pd.getWriteMethod() != null && !pd.getName().equals("version") && !pd.getName().equals("id")) {
 				Object testData = createRandomValue(pd.getPropertyType());
 				// Set value on entity
 				pd.getWriteMethod().invoke(getEntity(), testData);
@@ -272,7 +271,7 @@ public abstract class AbstractEntityTest<T extends AbstractEntity> {
 		T otherBean = createEntity();
 		BeanInfo info = Introspector.getBeanInfo(getEntity().getClass());
 		for (PropertyDescriptor pd : info.getPropertyDescriptors()) {
-			if (pd.getWriteMethod() != null) {
+			if (pd.getWriteMethod() != null && !pd.getName().equals("id") && !pd.getName().equals("version")) {
 				Object testData = createRandomValue(pd.getPropertyType());
 				// Set value on entity
 				pd.getWriteMethod().invoke(getEntity(), testData);

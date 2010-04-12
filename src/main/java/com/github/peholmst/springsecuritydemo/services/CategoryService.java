@@ -17,6 +17,8 @@ package com.github.peholmst.springsecuritydemo.services;
 
 import java.util.List;
 
+import org.springframework.security.access.prepost.PreAuthorize;
+
 import com.github.peholmst.springsecuritydemo.domain.Category;
 
 /**
@@ -35,6 +37,7 @@ public interface CategoryService {
 	 * @return an unmodifiable list containing all the root categories (never
 	 *         <code>null</code>).
 	 */
+	@PreAuthorize("hasRole('ROLE_USER')")
 	public List<Category> getRootCategories();
 
 	/**
@@ -47,6 +50,7 @@ public interface CategoryService {
 	 *         <code>parent</code>, or <code>null</code> if <code>parent</code>
 	 *         could not be found.
 	 */
+	@PreAuthorize("hasRole('ROLE_USER')")
 	public List<Category> getChildren(Category parent);
 
 	/**
@@ -56,6 +60,7 @@ public interface CategoryService {
 	 *            the category to save (must not be <code>null</code>).
 	 * @return the saved Category instance (never <code>null</code>).
 	 */
+	@PreAuthorize("hasRole('ROLE_USER')")
 	public Category saveCategory(Category category);
 
 	/**
@@ -67,26 +72,16 @@ public interface CategoryService {
 	 * @param category
 	 *            the category to delete (must not be <code>null</code>).
 	 */
+	@PreAuthorize("hasRole('ROLE_ADMIN')")
 	public void deleteCategory(Category category);
 
 	/**
-	 * Deletes the category identified by <code>uuid</code>. If the category has
-	 * children, they are adopted by the parent of the category. If the category
-	 * is a root and has children, they will become new roots. If no category is
-	 * found, nothing happens.
+	 * Gets the category identified by <code>id</code>.
 	 * 
-	 * @param uuid
-	 *            the UUID of the category to delete (must not be
-	 *            <code>null</code>).
-	 */
-	public void deleteCategoryByUUID(String uuid);
-
-	/**
-	 * Gets the category identified by <code>uuid</code>.
-	 * 
-	 * @param uuid
-	 *            the UUID of the category (must not be <code>null</code>).
+	 * @param id
+	 *            the id of the category (must not be <code>null</code>).
 	 * @return the category, or <code>null</code> if not found.
 	 */
-	public Category getCategoryByUUID(String uuid);
+	@PreAuthorize("hasRole('ROLE_USER')")
+	public Category getCategoryById(Long id);
 }

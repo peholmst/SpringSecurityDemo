@@ -16,16 +16,15 @@
 package com.github.peholmst.springsecuritydemo.domain;
 
 import java.io.Serializable;
-import java.util.UUID;
 
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Version;
 
 /**
- * Base class for entities. When a new entity instance is created, it is
- * automatically assigned a UUID that will be used as the entity's ID (and the
- * database's primary key).
+ * Base class for entities.
  * 
  * @author Petter Holmström
  */
@@ -35,7 +34,8 @@ public abstract class AbstractEntity implements Serializable {
 	private static final long serialVersionUID = 992875744546231123L;
 
 	@Id
-	private String uuid;
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
 	@Version
 	private Long version;
@@ -44,16 +44,26 @@ public abstract class AbstractEntity implements Serializable {
 	 * Creates a new <code>AbstractEntity</code>.
 	 */
 	public AbstractEntity() {
-		uuid = UUID.randomUUID().toString();
 	}
 
 	/**
-	 * Gets the UUID of this entity.
+	 * Gets the ID of this entity.
 	 * 
-	 * @return the UUID, never <code>null</code>.
+	 * @return the ID, ore <code>null</code> if the entity has not yet been
+	 *         persisted.
 	 */
-	public String getUUID() {
-		return uuid;
+	public Long getId() {
+		return id;
+	}
+
+	/**
+	 * Sets the ID of this entity.
+	 * 
+	 * @param id
+	 *            the ID to set.
+	 */
+	public void setId(Long id) {
+		this.id = id;
 	}
 
 	/**
@@ -65,5 +75,15 @@ public abstract class AbstractEntity implements Serializable {
 	 */
 	public Long getVersion() {
 		return version;
+	}
+
+	/**
+	 * Sets the version of this entity.
+	 * 
+	 * @param version
+	 *            the version to set.
+	 */
+	public void setVersion(Long version) {
+		this.version = version;
 	}
 }

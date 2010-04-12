@@ -178,38 +178,19 @@ public class CategoryServiceStubTest {
 		System.out.println("testDeleteCategory_NonExistent");
 		service.deleteCategory(new Category());
 	}
-	
+		
 	@Test
-	public void testDeleteCategoryByUUID() {
-		System.out.println("testDeleteCategoryByUUID");
-		Category root1 = new Category("Root1", "Description");
-		service.saveCategory(root1);
-		Category child1 = new Category("Child1", "Description", root1);
-		service.saveCategory(child1);
-
-		assertFalse(service.getChildren(root1).isEmpty());
-		service.deleteCategoryByUUID(child1.getUUID());
-		assertTrue(service.getChildren(root1).isEmpty());	
-	}
-	
-	@Test
-	public void testDeleteCategoryByUUID_NonExistent() {
-		System.out.println("testDeleteCategoryByUUID_NonExistent");
-		service.deleteCategoryByUUID("nonexistent");
-	}
-	
-	@Test
-	public void testGetCategoryByUUID() {
-		System.out.println("testGetCategoryByUUID");
+	public void testGetCategoryById() {
+		System.out.println("testGetCategoryById");
 		Category cat = new Category("Cat", "Description");
 		assertSame(cat, service.saveCategory(cat));
-		assertSame(cat, service.getCategoryByUUID(cat.getUUID()));
+		assertSame(cat, service.getCategoryById(cat.getId()));
 	}
 	
 	@Test
-	public void testGetCategoryByUUID_NonExistent() {
-		System.out.println("testGetCategoryByUUID_NonExistent");
-		assertNull(service.getCategoryByUUID("nonexistent"));
+	public void testGetCategoryById_NonExistent() {
+		System.out.println("testGetCategoryById_NonExistent");
+		assertNull(service.getCategoryById(-12l));
 	}
 	
 }

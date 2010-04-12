@@ -145,8 +145,8 @@ public class SpringSecurityDemoApp extends Application implements I18nProvider {
 		if (logger.isDebugEnabled()) {
 			logger.debug("Closing application [" + this + "]");
 		}
-		// Clear the security context to log the user out
-		SecurityContextHolder.clearContext();
+		// Clear the authentication property to log the user out
+		SecurityContextHolder.getContext().setAuthentication(null);
 		super.close();
 	}
 

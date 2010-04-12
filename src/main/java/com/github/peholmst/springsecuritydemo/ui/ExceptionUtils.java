@@ -95,7 +95,6 @@ public class ExceptionUtils {
 				.getMessage("common.unexpectedException.title"), app
 				.getMessage("common.unexpectedException.descr", exception
 						.getMessage()), Notification.TYPE_ERROR_MESSAGE);
-		// FIXME It seems that {0} shows up instead of the exception message. why?
 	}
 
 	/**

@@ -48,12 +48,12 @@ public class CategoryServiceStubTest {
 	}
 	
 	@Test
-	public void testSaveCategory_NewRoots() {
-		System.out.println("testSaveCategory_NewRoots");
+	public void testInsertCategory_NewRoots() {
+		System.out.println("testInsertCategory_NewRoots");
 		Category root1 = new Category("Root1", "Description");
-		service.saveCategory(root1);
+		service.insertCategory(root1);
 		Category root2 = new Category("Root2", "Description");
-		service.saveCategory(root2);
+		service.insertCategory(root2);
 		
 		assertEquals(2, service.getRootCategories().size());
 		assertEquals(root1, service.getRootCategories().get(0));
@@ -61,42 +61,42 @@ public class CategoryServiceStubTest {
 	}
 	
 	@Test
-	public void testSaveCategory_NewChild() {
-		System.out.println("testSaveCategory_NewChild");
+	public void testInsertCategory_NewChild() {
+		System.out.println("testInsertCategory_NewChild");
 		Category root1 = new Category("Root1", "Description");
-		service.saveCategory(root1);
+		service.insertCategory(root1);
 		Category child1 = new Category("Child1", "Description", root1);
-		service.saveCategory(child1);
+		service.insertCategory(child1);
 		
 		assertEquals(1, service.getRootCategories().size());
 		assertTrue(service.getChildren(root1).contains(child1));
 	}
 	
 	@Test
-	public void testSaveCategory_RootToChild() {
-		System.out.println("testSaveCategory_RootToChild");
+	public void testUpdateCategory_RootToChild() {
+		System.out.println("testUpdateCategory_RootToChild");
 		Category root1 = new Category("Root1", "Description");
-		service.saveCategory(root1);
+		service.insertCategory(root1);
 		Category root2 = new Category("Root2", "Description");
-		service.saveCategory(root2);
+		service.insertCategory(root2);
 
 		root2.setParent(root1);
-		service.saveCategory(root2);
+		service.updateCategory(root2);
 
 		assertEquals(1, service.getRootCategories().size());
 		assertTrue(service.getChildren(root1).contains(root2));
 	}
 	
 	@Test
-	public void testSaveCategory_ChildToRoot() {
-		System.out.println("testSaveCategory_ChildToRoot");
+	public void testUpdateCategory_ChildToRoot() {
+		System.out.println("testUpdateCategory_ChildToRoot");
 		Category root1 = new Category("Root1", "Description");
-		service.saveCategory(root1);
+		service.insertCategory(root1);
 		Category child1 = new Category("Child1", "Description", root1);
-		service.saveCategory(child1);
+		service.insertCategory(child1);
 
 		child1.setParent(null);
-		service.saveCategory(child1);
+		service.updateCategory(child1);
 		
 		assertEquals(2, service.getRootCategories().size());
 		assertEquals(root1, service.getRootCategories().get(0));
@@ -104,18 +104,18 @@ public class CategoryServiceStubTest {
 	}
 	
 	@Test
-	public void testSaveCategory_ParentUnchanged() {
-		System.out.println("testSaveCategory_ChildToRoot");
+	public void testUpdateCategory_ParentUnchanged() {
+		System.out.println("testUpdateCategory_ParentUnchanged");
 		Category root1 = new Category("Root1", "Description");
-		service.saveCategory(root1);
+		service.insertCategory(root1);
 		Category child1 = new Category("Child1", "Description", root1);
-		service.saveCategory(child1);
+		service.insertCategory(child1);
 
 		child1.setName("Another child");
-		assertSame(child1, service.saveCategory(child1));
+		assertSame(child1, service.updateCategory(child1));
 		
 		root1.setName("Another root");
-		assertSame(root1, service.saveCategory(root1));
+		assertSame(root1, service.updateCategory(root1));
 		
 		assertEquals(1, service.getRootCategories().size());
 		assertEquals(1, service.getChildren(root1).size());
@@ -123,20 +123,20 @@ public class CategoryServiceStubTest {
 	}
 	
 	@Test(expected=IllegalArgumentException.class)
-	public void testSaveCategory_InvalidParent() {
+	public void testInsertCategory_InvalidParent() {
 		System.out.println("testSaveCategory_InvalidParent");
 		Category invalid = new Category("Invalid", "Description");
 		Category child1 = new Category("Child1", "Description", invalid);
-		service.saveCategory(child1);
+		service.insertCategory(child1);
 	}
 	
 	@Test
 	public void testDeleteCategory_Leaf() {
 		System.out.println("testDeleteCategory_Leaf");
 		Category root1 = new Category("Root1", "Description");
-		service.saveCategory(root1);
+		service.insertCategory(root1);
 		Category child1 = new Category("Child1", "Description", root1);
-		service.saveCategory(child1);
+		service.insertCategory(child1);
 
 		assertFalse(service.getChildren(root1).isEmpty());
 		service.deleteCategory(child1);
@@ -147,11 +147,11 @@ public class CategoryServiceStubTest {
 	public void testDeleteCategory_Parent() {
 		System.out.println("testDeleteCategory_Parent");
 		Category root1 = new Category("Root1", "Description");
-		service.saveCategory(root1);
+		service.insertCategory(root1);
 		Category child1 = new Category("Child1", "Description", root1);
-		service.saveCategory(child1);
+		service.insertCategory(child1);
 		Category grandChild1 = new Category("GrandChild1", "Description", child1);
-		service.saveCategory(grandChild1);
+		service.insertCategory(grandChild1);
 		
 		service.deleteCategory(child1);
 		assertFalse(service.getChildren(root1).contains(child1));
@@ -163,9 +163,9 @@ public class CategoryServiceStubTest {
 	public void testDeleteCategory_Root() {
 		System.out.println("testDeleteCategory_Root");
 		Category root1 = new Category("Root1", "Description");
-		service.saveCategory(root1);
+		service.insertCategory(root1);
 		Category child1 = new Category("Child1", "Description", root1);
-		service.saveCategory(child1);
+		service.insertCategory(child1);
 
 		service.deleteCategory(root1);
 		assertFalse(service.getRootCategories().contains(root1));
@@ -183,7 +183,7 @@ public class CategoryServiceStubTest {
 	public void testGetCategoryById() {
 		System.out.println("testGetCategoryById");
 		Category cat = new Category("Cat", "Description");
-		assertSame(cat, service.saveCategory(cat));
+		assertSame(cat, service.insertCategory(cat));
 		assertSame(cat, service.getCategoryById(cat.getId()));
 	}
 	

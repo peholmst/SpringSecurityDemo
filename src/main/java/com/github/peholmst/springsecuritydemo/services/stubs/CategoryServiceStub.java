@@ -20,6 +20,8 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.springframework.dao.DataRetrievalFailureException;
+
 import com.github.peholmst.springsecuritydemo.domain.Category;
 import com.github.peholmst.springsecuritydemo.services.CategoryService;
 
@@ -115,20 +117,40 @@ public class CategoryServiceStub implements CategoryService {
 		CategoryEntry entry = categories.get(NULL_CATEGORY.getId());
 		return Collections.unmodifiableList(entry.children);
 	}
-
+	
 	@Override
-	public Category saveCategory(Category category) {
-		if (category.getId() == null) {
-			category.setId(nextId++);
+	public Category insertCategory(Category category) {
+		if (category.getId() != null && categories.containsKey(category.getId())) {
+			throw new IllegalStateException("Category already exists");
 		}
-		// Check if the category has already been saved once?
-		CategoryEntry entry = categories.get(category.getId());
-		if (entry == null) {
-			// New category
-			entry = new CategoryEntry(category);
-			categories.put(category.getId(), entry);
+		// Check that parent property points to a valid category
+		if (category.getParent() != null
+				&& !categories.containsKey(category.getParent().getId())) {
+			throw new IllegalArgumentException("Invalid parent property");
+		}		
+		
+		// Generate ID and save in map
+		category.setId(nextId++);
+		CategoryEntry entry = new CategoryEntry(category);
+		categories.put(category.getId(), entry);
+		
+		// Update parent index
+		Category parent = category.getParent();
+		if (parent == null) {
+			parent = NULL_CATEGORY;
 		}
-
+		
+		categories.get(parent.getId()).children.add(category);
+		categoryToParentMap.put(category.getId(), parent);
+		
+		return category;
+	}
+	
+	@Override
+	public Category updateCategory(Category category) {
+		if (category.getId() == null || !categories.containsKey(category.getId())) {
+			throw new DataRetrievalFailureException("Category could not be found");
+		}
 		// Check that parent property points to a valid category
 		if (category.getParent() != null
 				&& !categories.containsKey(category.getParent().getId())) {
@@ -152,7 +174,7 @@ public class CategoryServiceStub implements CategoryService {
 			categories.get(parent.getId()).children.add(category);
 			categoryToParentMap.put(category.getId(), parent);
 		}
-		return category;
+		return category;	
 	}
 	
 	@Override

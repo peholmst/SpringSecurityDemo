@@ -17,6 +17,8 @@ package com.github.peholmst.springsecuritydemo.services;
 
 import java.util.List;
 
+import org.springframework.dao.DataRetrievalFailureException;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.security.access.prepost.PreAuthorize;
 
 import com.github.peholmst.springsecuritydemo.domain.Category;
@@ -54,14 +56,34 @@ public interface CategoryService {
 	public List<Category> getChildren(Category parent);
 
 	/**
-	 * Saves <code>category</code>.
+	 * Updates <code>category</code> in the database.
 	 * 
 	 * @param category
-	 *            the category to save (must not be <code>null</code>).
-	 * @return the saved Category instance (never <code>null</code>).
+	 *            the category to update (must not be <code>null</code>).
+	 * @return the updated Category instance (never <code>null</code>).
+	 * @throws DataRetrievalFailureException
+	 *             if the category was not found in the database.
+	 * @throws OptimisticLockingFailureException
+	 *             if the category has been altered by another user after it was
+	 *             retrieved from the database.
 	 */
 	@PreAuthorize("hasRole('ROLE_USER')")
-	public Category saveCategory(Category category);
+	public Category updateCategory(Category category)
+			throws DataRetrievalFailureException,
+			OptimisticLockingFailureException;
+
+	/**
+	 * Inserts <code>category</code> into the database.
+	 * 
+	 * @param category
+	 *            the category to insert (must not be <code>null</code>).
+	 * @return the inserted Category instance (never <code>null</code>).
+	 * @throws IllegalStateException
+	 *             if the category already exists in the database.
+	 */
+	@PreAuthorize("hasRole('ROLE_USER')")
+	public Category insertCategory(Category category)
+			throws IllegalStateException;
 
 	/**
 	 * Deletes <code>category</code>. If <code>category</code> has children,
@@ -71,9 +93,13 @@ public interface CategoryService {
 	 * 
 	 * @param category
 	 *            the category to delete (must not be <code>null</code>).
+	 * @throws OptimisticLockingFailureException
+	 *             if the category has been altered by another user after it was
+	 *             retrieved from the database.
 	 */
 	@PreAuthorize("hasRole('ROLE_ADMIN')")
-	public void deleteCategory(Category category);
+	public void deleteCategory(Category category)
+			throws OptimisticLockingFailureException;
 
 	/**
 	 * Gets the category identified by <code>id</code>.

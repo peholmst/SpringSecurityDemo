@@ -35,6 +35,7 @@ import org.springframework.stereotype.Component;
 import com.github.peholmst.springsecuritydemo.VersionInfo;
 import com.github.peholmst.springsecuritydemo.services.CategoryService;
 import com.vaadin.Application;
+import com.vaadin.service.ApplicationContext.TransactionListener;
 import com.vaadin.ui.Window;
 import com.vaadin.ui.Component.Event;
 
@@ -49,12 +50,17 @@ import com.vaadin.ui.Component.Event;
  * annotations. Its scope has been set to "prototype", meaning that a new
  * instance of the class will be returned every time the bean is accessed in the
  * Spring application context.
+ * <p>
+ * This class contains a lot of logging entries, the purpose of which is to make
+ * it possible to follow what happens under the hood at different stages of the
+ * application lifecycle.
  * 
  * @author Petter Holmström
  */
 @Component("applicationBean")
 @Scope("prototype")
-public class SpringSecurityDemoApp extends Application implements I18nProvider {
+public class SpringSecurityDemoApp extends Application implements I18nProvider,
+		TransactionListener {
 
 	private static final long serialVersionUID = -1412284137848857188L;
 
@@ -71,7 +77,7 @@ public class SpringSecurityDemoApp extends Application implements I18nProvider {
 
 	@Resource
 	private CategoryService categoryService;
-	
+
 	private LoginView loginView;
 
 	private MainView mainView;
@@ -101,6 +107,9 @@ public class SpringSecurityDemoApp extends Application implements I18nProvider {
 		if (logger.isDebugEnabled()) {
 			logger.debug("Initializing application [" + this + "]");
 		}
+		// Register listener
+		getContext().addTransactionListener(this);
+
 		// Create the views
 		loginView = new LoginView(this, authenticationManager);
 		loginView.setSizeFull();
@@ -108,7 +117,7 @@ public class SpringSecurityDemoApp extends Application implements I18nProvider {
 		setTheme("SpringSecurityDemo"); // We use a custom theme
 
 		final Window loginWindow = new Window(getMessage("app.title",
-				getVersion()), loginView);
+			getVersion()), loginView);
 		setMainWindow(loginWindow);
 
 		loginView.addListener(new com.vaadin.ui.Component.Listener() {
@@ -118,21 +127,23 @@ public class SpringSecurityDemoApp extends Application implements I18nProvider {
 					if (logger.isDebugEnabled()) {
 						logger.debug("User logged on ["
 								+ ((LoginView.LoginEvent) event)
-										.getAuthentication() + "]");
+									.getAuthentication() + "]");
 					}
 					/*
 					 * A user has logged on, which means we can ditch the login
 					 * view and open the main view instead. We also have to
 					 * update the security context holder.
 					 */
+					setUser(((LoginView.LoginEvent) event).getAuthentication());
 					SecurityContextHolder.getContext().setAuthentication(
-							((LoginView.LoginEvent) event).getAuthentication());
+						((LoginView.LoginEvent) event).getAuthentication());
 					removeWindow(loginWindow);
 					loginView = null;
-					mainView = new MainView(SpringSecurityDemoApp.this, categoryService);
+					mainView = new MainView(SpringSecurityDemoApp.this,
+						categoryService);
 					mainView.setSizeFull();
 					setMainWindow(new Window(getMessage("app.title",
-							getVersion()), mainView));
+						getVersion()), mainView));
 				}
 			}
 		});
@@ -146,7 +157,10 @@ public class SpringSecurityDemoApp extends Application implements I18nProvider {
 			logger.debug("Closing application [" + this + "]");
 		}
 		// Clear the authentication property to log the user out
-		SecurityContextHolder.getContext().setAuthentication(null);
+		setUser(null);
+		// Also clear the security context
+		SecurityContextHolder.clearContext();
+		getContext().removeTransactionListener(this);
 		super.close();
 	}
 
@@ -162,16 +176,44 @@ public class SpringSecurityDemoApp extends Application implements I18nProvider {
 		super.finalize();
 	}
 
+	@Override
+	public void transactionEnd(Application application, Object transactionData) {
+		if (logger.isDebugEnabled()) {
+			logger
+				.debug("Transaction ended, removing authentication data from security context");
+		}
+		/*
+		 * The purpose of this
+		 */
+		SecurityContextHolder.getContext().setAuthentication(null);
+	}
+
+	@Override
+	public void transactionStart(Application application, Object transactionData) {
+		if (logger.isDebugEnabled()) {
+			logger
+				.debug("Transaction started, setting authentication data of security context to ["
+						+ application.getUser() + "]");
+		}
+		/*
+		 * The security context holder uses the thread local pattern to store
+		 * its authentication credentials. As requests may be handled by
+		 * different threads, we have to update the security context holder in
+		 * the beginning of each transaction.
+		 */
+		SecurityContextHolder.getContext().setAuthentication(
+			(Authentication) application.getUser());
+	}
+
 	/**
-	 * Gets the currently logged in user from {@link SecurityContextHolder}. If
-	 * this value is <code>null</code>, no user has been logged in yet.
+	 * Gets the currently logged in user. If this value is <code>null</code>, no
+	 * user has been logged in yet.
 	 * 
 	 * @return an {@link Authentication} instance.
 	 */
 	@Override
 	public Authentication getUser() {
-		// Get the user object form Spring Security
-		return SecurityContextHolder.getContext().getAuthentication();
+		return (Authentication) super.getUser();
 	}
 
 	@Override

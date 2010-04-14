@@ -264,7 +264,12 @@ public final class CategoryBrowser {
 						 * service.
 						 */
 						try {
-							category = getCategoryService().saveCategory(category);
+							if (isNew) {
+								category = getCategoryService().insertCategory(category);
+							} else {
+								category = getCategoryService().updateCategory(category);
+							}
+							
 							/*
 							 * Remember to refresh the container, otherwise the
 							 * new/updated category won't show up in the tree.

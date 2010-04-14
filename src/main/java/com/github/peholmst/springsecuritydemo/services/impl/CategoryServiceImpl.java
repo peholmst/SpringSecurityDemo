@@ -20,10 +20,12 @@ import java.util.List;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -54,8 +56,6 @@ public class CategoryServiceImpl implements CategoryService {
 	}
 
 	// TODO Fix tickets that reference the category that is removed
-
-	// FIXME Change children of category that is removed
 	
 	@Override
 	@Transactional
@@ -63,6 +63,10 @@ public class CategoryServiceImpl implements CategoryService {
 		assert category != null : "category must not be null";
 		if (logger.isDebugEnabled()) {
 			logger.debug("Deleting category [" + category + "]");
+		}
+		// Category's parent adopts the orphans
+		for (Category child : getChildren(category)) {
+			child.setParent(category.getParent());
 		}
 		getEntityManager().remove(getEntityManager().merge(category));
 		getEntityManager().flush();
@@ -112,17 +116,64 @@ public class CategoryServiceImpl implements CategoryService {
 		}
 		return Collections.unmodifiableList(result);
 	}
-
+	
 	@Override
 	@Transactional
-	public Category saveCategory(Category category) {
+	public Category insertCategory(Category category) {
 		assert category != null : "category must not be null";
 		if (logger.isDebugEnabled()) {
-			logger.debug("Saving category [" + category + "]");
+			logger.debug("Inserting category [" + category + "]");
 		}
-		Category merged = getEntityManager().merge(category);
-		getEntityManager().flush();
-		return merged;
+		if (containsCategory(category)) {
+			if (logger.isDebugEnabled()) {
+				logger.debug("Cannot insert category [" + category + "] as it already exists");
+			}
+			throw new IllegalStateException("Category already exists");
+		} else {
+			getEntityManager().persist(category);
+			return category;
+		}
+	}
+	
+	@Override
+	@Transactional
+	public Category updateCategory(Category category) {
+		assert category != null : "category must not be null";
+		if (logger.isDebugEnabled()) {
+			logger.debug("Updating category [" + category + "]");
+		}
+		if (!containsCategory(category)) {
+			if (logger.isDebugEnabled()) {
+				logger.debug("Cannot update category [" + category + "] as it could not be found");
+			}
+			throw new DataRetrievalFailureException("Could not find category to update");
+		} else {
+			Category merged = getEntityManager().merge(category);
+			getEntityManager().flush();
+			return merged;
+		}
+	}
+
+	/**
+	 * TODO Document me!
+	 * 
+	 * @param category
+	 * @return
+	 */
+	protected boolean containsCategory(Category category) {
+		assert category != null : "category must not be null";
+		if (category.getId() == null) {
+			return false;
+		} else {
+			Query query = getEntityManager().createQuery("SELECT count(c) FROM Category c WHERE c.id = :id");
+			query.setParameter("id", category.getId());
+			Object result = query.getSingleResult();
+			if (result instanceof Integer) {
+				return ((Integer) result).intValue() == 1;
+			} else {
+				return ((Long) result).longValue() == 1;
+			}
+		}
 	}
 
 }

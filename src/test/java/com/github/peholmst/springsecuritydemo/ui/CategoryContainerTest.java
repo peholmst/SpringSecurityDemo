@@ -56,12 +56,12 @@ public class CategoryContainerTest {
 		for (int i = 1; i<=5; ++i) {
 			Category r = new Category();
 			r.setName("Root" + i);
-			service.saveCategory(r);
+			service.insertCategory(r);
 			for (int j = 1; j <= 5; ++j) {
 				Category c = new Category();
 				c.setName("Child" + i + "_" + j);
 				c.setParent(r);
-				service.saveCategory(c);
+				service.insertCategory(c);
 			}
 		}
 	}

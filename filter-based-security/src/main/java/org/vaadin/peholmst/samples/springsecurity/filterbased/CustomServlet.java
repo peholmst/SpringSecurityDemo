@@ -20,6 +20,8 @@ public class CustomServlet extends SpringVaadinServlet {
             messages.setSessionExpiredNotificationEnabled(false);
             // Force a logout to also end the HTTP session and not only the Vaadin session
             messages.setSessionExpiredURL("logout");
+            // Don't show any message, reload the page instead
+            messages.setCommunicationErrorNotificationEnabled(false);
             return messages;
         });
     }

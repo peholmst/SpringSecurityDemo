@@ -8,6 +8,7 @@
 	<version>0.0.1-SNAPSHOT</version>
 	<modules>
 		<module>filter-based-security</module>
+		<module>hybrid-security</module>
 	</modules>
 	<packaging>pom</packaging>
 

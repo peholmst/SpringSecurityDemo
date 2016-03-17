@@ -16,7 +16,6 @@ public class SampleViewAccessControl implements ViewAccessControl {
 
     @Override
     public boolean isAccessGranted(UI ui, String beanName) {
-        System.out.println("Checking access to " + beanName);
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null) {
             if (beanName.equals("adminView")) {

@@ -1,23 +1,27 @@
 package org.vaadin.peholmst.samples.springsecurity.filterbased;
 
-import com.vaadin.navigator.Navigator;
-import com.vaadin.server.DefaultErrorHandler;
-import com.vaadin.server.ErrorEvent;
-import com.vaadin.spring.navigator.SpringViewProvider;
-import com.vaadin.ui.*;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Timer;
+import java.util.TimerTask;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.vaadin.annotations.Push;
 import com.vaadin.annotations.Theme;
-import com.vaadin.server.ErrorHandler;
+import com.vaadin.navigator.Navigator;
+import com.vaadin.server.DefaultErrorHandler;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.shared.ui.ui.Transport;
 import com.vaadin.spring.annotation.SpringUI;
+import com.vaadin.spring.navigator.SpringViewProvider;
+import com.vaadin.ui.*;
 import com.vaadin.ui.themes.ValoTheme;
-import org.springframework.security.access.AccessDeniedException;
 
 @SpringUI
-@Push(transport = Transport.LONG_POLLING) // Websocket would bypass the filter chain
+@Push(transport = Transport.WEBSOCKET_XHR) // Websocket would bypass the filter chain, Websocket+XHR works
 @Theme(ValoTheme.THEME_NAME) // Looks nicer
 public class SecuredUI extends UI {
 
@@ -29,6 +33,10 @@ public class SecuredUI extends UI {
 
     @Autowired
     ErrorView errorView;
+
+    private Label timeAndUser;
+
+    private Timer timer;
 
     @Override
     protected void init(VaadinRequest request) {
@@ -59,6 +67,10 @@ public class SecuredUI extends UI {
             // Let Spring Security handle the logout by redirecting to the logout URL
             getPage().setLocation("logout");
         }));
+        timeAndUser = new Label();
+        timeAndUser.setSizeUndefined();
+        buttons.addComponent(timeAndUser);
+        buttons.setComponentAlignment(timeAndUser, Alignment.MIDDLE_LEFT);
 
         Panel viewContainer = new Panel();
         viewContainer.setSizeFull();
@@ -73,12 +85,36 @@ public class SecuredUI extends UI {
         navigator.addProvider(viewProvider);
         navigator.setErrorView(errorView);
         viewProvider.setAccessDeniedViewClass(AccessDeniedView.class);
+
+        // Fire up a timer to demonstrate server push. Do NOT use timers in real-world applications, use a thread pool.
+        timer = new Timer();
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                updateTimeAndUser();
+            }
+        }, 1000L, 1000L);
+    }
+
+    @Override
+    public void detach() {
+        super.detach();
+        timer.cancel();
+    }
+
+    private void updateTimeAndUser() {
+        // Demonstrate that server push works, but the security context is not available inside the Timer thread
+        // since it is thread-local and populated by a servlet filter.
+        access(
+            () -> timeAndUser.setValue(String.format("The server-side time is %s and the authentication token in this thread is %s",
+                LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")), SecurityContextHolder.getContext().getAuthentication())));
     }
 
     private void handleError(com.vaadin.server.ErrorEvent event) {
-       Throwable t = DefaultErrorHandler.findRelevantThrowable(event.getThrowable());
+        Throwable t = DefaultErrorHandler.findRelevantThrowable(event.getThrowable());
         if (t instanceof AccessDeniedException) {
-            Notification.show("You do not have permission to perform this operation", Notification.Type.WARNING_MESSAGE);
+            Notification.show("You do not have permission to perform this operation",
+                Notification.Type.WARNING_MESSAGE);
         } else {
             DefaultErrorHandler.doDefault(event);
         }

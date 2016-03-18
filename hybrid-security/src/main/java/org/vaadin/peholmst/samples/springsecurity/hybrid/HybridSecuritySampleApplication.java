@@ -23,7 +23,7 @@ public class HybridSecuritySampleApplication {
             //@formatter:off
             auth
                 .inMemoryAuthentication()
-                    .withUser("admin").password("p").roles("ADMIN")
+                    .withUser("admin").password("p").roles("ADMIN", "USER")
                     .and()
                     .withUser("user").password("p").roles("USER");
             //@formatter:on
